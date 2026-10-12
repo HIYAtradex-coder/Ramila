@@ -1,0 +1,21 @@
+{
+  "name": "hiya-smartpos",
+  "private": true,
+  "version": "0.1.0",
+  "description": "HIYA SmartPOS / StationIQ — multi-store retail, restaurant, franchise and fuel operations platform",
+  "packageManager": "pnpm@10.33.4",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r --filter './packages/*' run build",
+    "dev:api": "pnpm --filter @hiya/api dev",
+    "dev:web": "pnpm --filter @hiya/owner-web dev",
+    "test": "pnpm --filter @hiya/api test",
+    "db:generate": "pnpm --filter @hiya/db generate",
+    "db:migrate": "pnpm --filter @hiya/db migrate:dev",
+    "db:seed": "pnpm --filter @hiya/db seed",
+    "typecheck": "pnpm -r --filter './packages/*' run typecheck",
+    "lint": "pnpm -r --filter './packages/*' run typecheck"
+  }
+}

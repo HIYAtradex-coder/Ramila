@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "HIYA Rewards",
+    "slug": "hiya-customer",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "hiya-customer",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android", "web"],
+    "plugins": ["expo-router"]
+  }
+}

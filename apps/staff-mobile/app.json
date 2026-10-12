@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "HIYA Staff",
+    "slug": "hiya-staff",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "hiya-staff",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android", "web"],
+    "plugins": ["expo-router"]
+  }
+}
