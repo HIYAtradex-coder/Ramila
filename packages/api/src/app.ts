@@ -9,6 +9,8 @@ import storeRoutes from "./routes/stores.js";
 import billingRoutes from "./routes/billing.js";
 import inventoryRoutes from "./routes/inventory.js";
 import invoiceRoutes from "./routes/invoices.js";
+import vendorPaymentRoutes from "./routes/vendor-payments.js";
+import bankStatementRoutes from "./routes/bank-statements.js";
 import auditRoutes from "./routes/audit.js";
 
 export type BuildAppOptions = {
@@ -36,6 +38,8 @@ export async function buildApp(opts: BuildAppOptions = {}) {
   await app.register(billingRoutes);
   await app.register(inventoryRoutes);
   await app.register(invoiceRoutes);
+  await app.register(vendorPaymentRoutes);
+  await app.register(bankStatementRoutes);
   await app.register(auditRoutes);
 
   return app;

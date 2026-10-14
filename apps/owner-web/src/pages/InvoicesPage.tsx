@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { ModuleShell } from "../components/ModuleShell";
 import { ModuleWorkspace } from "../components/ModuleWorkspace";
 import { AiAssistPanel } from "../components/AiAssistPanel";
 import { useAuth } from "../auth";
 import { api, type Invoice } from "../api";
+import { fileToBase64, mimeAllowedForInvoice } from "../lib/file-to-base64";
 
 export function InvoicesPage() {
   const { token, storeId } = useAuth();
@@ -13,6 +14,9 @@ export function InvoicesPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [handwriting, setHandwriting] = useState(true);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   async function refresh(accessToken: string, activeStoreId: string) {
     const docs = await api<{ invoices: Invoice[] }>(
@@ -71,6 +75,47 @@ export function InvoicesPage() {
     }
   }
 
+  async function runScan(file: File, captureSource: "camera" | "file") {
+    if (!token || !storeId) return;
+    if (!mimeAllowedForInvoice(file.type)) {
+      setError(`Unsupported type: ${file.type || "unknown"}`);
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      const contentBase64 = await fileToBase64(file);
+      const res = await api<{
+        invoiceId: string;
+        status: string;
+        inventoryPosted: boolean;
+        moneyPosted: boolean;
+        aiMode: string;
+        requiresHumanReview: boolean;
+        honesty: string;
+      }>("/invoices/scan/propose", {
+        method: "POST",
+        token,
+        body: JSON.stringify({
+          storeId,
+          fileName: file.name || "capture.jpg",
+          mimeType: file.type,
+          contentBase64,
+          handwriting,
+          captureSource,
+        }),
+      });
+      setMessage(
+        `AI scan (${res.aiMode}) → invoice ${res.invoiceId.slice(0, 8)}… status=${res.status}. inventoryPosted=${res.inventoryPosted} moneyPosted=${res.moneyPosted}. Human review required before PIN approve posts stock.`,
+      );
+      await refresh(token, storeId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Scan propose failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function approveLatest() {
     if (!token || !storeId) return;
     const pending = invoices.find((i) =>
@@ -108,9 +153,9 @@ export function InvoicesPage() {
   return (
     <ModuleShell
       title="Invoices"
-      eyebrow="Propose → human post"
+      eyebrow="Scan → propose → human post"
       status="WORKING"
-      note="Pilot invoice path: create proposal, then approve with PIN. AI never posts inventory. Document capture is device-local only — not OCR vendor ingest yet."
+      note="Camera/file capture + DEMO AI propose (print or handwriting) feeds the existing proposal pipeline. AI never posts inventory or money. Human PIN approve posts stock idempotently."
     >
       <ModuleWorkspace
         fieldLabel="Invoice notes / OCR scratch"
@@ -120,6 +165,65 @@ export function InvoicesPage() {
       >
         <AiAssistPanel department="invoices" label="Invoices" />
       </ModuleWorkspace>
+
+      <div className="data-panel">
+        <h2>Mobile / camera invoice scan</h2>
+        <p className="muted">
+          Take a photo or pick a file. DEMO AI proposes vendor/lines — you must
+          review, then approve with PIN to post inventory.
+        </p>
+        <label className="filter-row">
+          <input
+            type="checkbox"
+            checked={handwriting}
+            onChange={(e) => setHandwriting(e.target.checked)}
+          />
+          <span>Treat as handwritten (forces lower confidence / review)</span>
+        </label>
+        <div className="row">
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => cameraRef.current?.click()}
+          >
+            Camera capture
+          </button>
+          <button
+            type="button"
+            className="secondary"
+            disabled={busy}
+            onClick={() => fileRef.current?.click()}
+          >
+            Choose file / PDF
+          </button>
+        </div>
+        <input
+          ref={cameraRef}
+          className="sr-only"
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) void runScan(f, "camera");
+          }}
+        />
+        <input
+          ref={fileRef}
+          className="sr-only"
+          type="file"
+          accept="image/*,application/pdf"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            e.target.value = "";
+            if (f) void runScan(f, "file");
+          }}
+        />
+        <p className="demo-tag">
+          DEMO AI propose · device-local capture · not a production OCR vendor
+        </p>
+      </div>
 
       <div className="data-panel">
         <h2>Actions</h2>
@@ -175,7 +279,7 @@ export function InvoicesPage() {
             {invoices.length === 0 && (
               <tr>
                 <td colSpan={4} className="muted">
-                  No invoices yet — create a proposal above.
+                  No invoices yet — create a proposal or scan above.
                 </td>
               </tr>
             )}

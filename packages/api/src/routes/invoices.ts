@@ -2,14 +2,52 @@ import type { FastifyPluginAsync } from "fastify";
 import {
   ApproveInvoiceRequest,
   CreateInvoiceProposalRequest,
+  InvoiceScanProposeRequest,
 } from "@hiya/contracts";
 import { AuthzError, requireStoreCapability } from "../services/authz.js";
 import {
   approveAndPostInvoice,
   createInvoiceProposal,
 } from "../services/invoice.js";
+import { proposeInvoiceFromScan } from "../services/invoice-scan.js";
 
 const invoiceRoutes: FastifyPluginAsync = async (app) => {
+  /** Camera/file → DEMO AI propose → invoice proposal. Never posts inventory/money. */
+  app.post(
+    "/invoices/scan/propose",
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      const parsed = InvoiceScanProposeRequest.safeParse(request.body);
+      if (!parsed.success) {
+        return reply.code(400).send({
+          error: "Invalid invoice scan",
+          code: "validation_error",
+          details: parsed.error.flatten(),
+        });
+      }
+
+      try {
+        await requireStoreCapability(
+          app.prisma,
+          request.actor,
+          parsed.data.storeId,
+          "invoice:ingest",
+        );
+        const result = await proposeInvoiceFromScan(
+          app.prisma,
+          request.actor,
+          parsed.data,
+        );
+        return reply.code(201).send(result);
+      } catch (err) {
+        if (err instanceof AuthzError) {
+          return reply.code(err.statusCode).send({ error: err.message, code: err.code });
+        }
+        throw err;
+      }
+    },
+  );
+
   app.post(
     "/invoices/proposals",
     { preHandler: [app.authenticate] },

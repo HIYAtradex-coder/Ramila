@@ -8,6 +8,8 @@ build
 *.log
 .env
 .env.local
+.data
+packages/api/.data
 coverage
 *.tsbuildinfo
 .DS_Store
