@@ -10,7 +10,7 @@ Requirements source: Project store Master Prompt (consolidated brief). This repo
 
 ## Current reality
 
-Pilot scaffold + thin vertical slice is landed. Owner web now has an **iPhone-style Home tile grid** (10 modules, Daily Station v2 chrome) with shared device capture tools and DEMO AI proposal helpers. Most product backends are still **MISSING/MOCK**. Do not claim vendor integrations exist.
+Pilot scaffold + thin vertical slice is landed. Owner web now has an **iPhone-style Home tile grid** (13 modules, Daily Station v2 chrome) with shared device capture tools and DEMO AI proposal helpers. Most product backends are still **MISSING/MOCK**. Do not claim vendor integrations exist.
 
 Truth table: [docs/FEATURE_STATUS.md](./docs/FEATURE_STATUS.md)  
 Home tiles map: Project store `docs/home-tiles.md`

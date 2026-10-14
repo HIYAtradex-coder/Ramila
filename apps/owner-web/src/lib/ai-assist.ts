@@ -13,7 +13,10 @@ export type AiDepartment =
   | "expenses"
   | "inventory"
   | "invoices"
-  | "multi-store";
+  | "multi-store"
+  | "vendors"
+  | "orders"
+  | "pricing";
 
 export type AiProposal = {
   id: string;
@@ -198,6 +201,63 @@ const PROPOSALS: Record<AiDepartment, Omit<AiProposal, "id" | "demo">> = {
       ],
       honesty:
         "DEMO proposals · plan MOCK · cross-store KPIs UNKNOWN · not vendor-synced · no Stripe",
+      requiresHumanApprove: true,
+    },
+  vendors: {
+      department: "vendors",
+      title: "Vendor hygiene checklist",
+      summary:
+        "Suggest directory cleanup before purchasing/invoice work. No EDI or supplier portal is claimed connected.",
+      checklist: [
+        "Confirm fuel / grocery / lottery / services categories for active store",
+        "Match invoice proposal vendor names to directory rows",
+        "Capture contact via device tools (local only)",
+        "Do not treat UNKNOWN phone/email as empty — fill with human verify",
+      ],
+      possibleIssues: [
+        "Possible duplicate vendor names across stores — merge only after owner review",
+        "Possible mismatched category on a grocery vs beverage supplier — human confirm",
+      ],
+      honesty:
+        "DEMO proposals · directory MOCK · invoice names may be live · no vendor portal",
+      requiresHumanApprove: true,
+    },
+  orders: {
+      department: "orders",
+      title: "Order close checklist",
+      summary:
+        "Propose steps for vendor POs and pickup holds. Not a marketplace; human approve before inventory/money posts.",
+      checklist: [
+        "Confirm vendor on PO matches Vendors directory",
+        "Age-check notes on customer pickup holds",
+        "Receive against invoice proposal — do not auto-post stock",
+        "Owner PIN approve on Invoices before eaches move",
+      ],
+      possibleIssues: [
+        "Possible PO without matching invoice — human reconcile before post",
+        "Possible pickup hold past pickup window — staff verify, no guilt language",
+      ],
+      honesty:
+        "DEMO proposals · orders MOCK · no DoorDash/Wawa · AI never posts",
+      requiresHumanApprove: true,
+    },
+  pricing: {
+      department: "pricing",
+      title: "Price publish review",
+      summary:
+        "Suggest review steps before any price publish. Writes default OFF — no POS/fuel vendor publish from AI.",
+      checklist: [
+        "Compare proposed item prices to cost from recent invoices (human)",
+        "Confirm fuel grade proposals only for fuel-enabled stores",
+        "Require owner step-up before publish when connector exists",
+        "Keep publish button blocked until certified adapter",
+      ],
+      possibleIssues: [
+        "Possible shelf-tag mismatch if publish skipped — human verify tags",
+        "Possible fuel grade mix-up (regular vs midgrade) — owner confirm before any FPC",
+      ],
+      honesty:
+        "DEMO proposals · price book MOCK · writes OFF · no Verifone/Gilbarco FPC",
       requiresHumanApprove: true,
     },
 };

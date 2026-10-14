@@ -25,7 +25,10 @@ Audited against repository code after pilot scaffold (not aspirational).
 | Idempotent approve | WORKING | `idempotencyKey` on invoice |
 | Duplicate invoice hash guard | WORKING | `contentHash` uniqueness check |
 | Owner web console | PARTIAL | iPhone-style home tiles + 9 modules; login + store scope |
-| Owner home tile grid | WORKING | `/` — 10 tiles incl. Multi-store (`/stores`) |
+| Owner home tile grid | WORKING | `/` — 13 tiles incl. Vendors, Orders, Pricing, Multi-store |
+| Vendor directory UI | MOCK | `/vendors` — categories + invoice name link; no EDI/portal |
+| Orders / PO / pickup UI | MOCK | `/orders` — sections only; no marketplace/DoorDash/Wawa |
+| Pricing / price books UI | MOCK | `/pricing` — proposals only; publish writes OFF; no FPC vendor |
 | Multi-store portfolio UI | PARTIAL | Membership list + switch; rollup KPIs UNKNOWN; no vendor sync claim |
 | Org store-seat plan (base 1 + $100/mo) | PARTIAL | `OrganizationPlan` + `/billing/plan` + `POST /stores`; billingMode MOCK only |
 | Stripe / real subscription charge | MISSING | Explicitly not wired — MOCK ledger labels required |

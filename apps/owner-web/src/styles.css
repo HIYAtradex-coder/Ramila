@@ -897,6 +897,13 @@ th {
   font-weight: 500;
 }
 
+.filter-row {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+  max-width: 16rem;
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;

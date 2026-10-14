@@ -1,13 +1,16 @@
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
+  Building2,
   Camera,
   ClipboardList,
   FileText,
   LayoutGrid,
   Package,
   Receipt,
+  ShoppingCart,
   Store,
+  Tag,
   Ticket,
   Users,
   Wallet,
@@ -87,6 +90,30 @@ const BOOKS: TileDef[] = [
     icon: FileText,
     status: "WORKING",
   },
+  {
+    to: "/vendors",
+    label: "Vendors",
+    tone: "teal",
+    icon: Building2,
+    status: "MOCK",
+  },
+  {
+    to: "/orders",
+    label: "Orders",
+    tone: "gold",
+    icon: ShoppingCart,
+    status: "MOCK",
+  },
+  {
+    to: "/pricing",
+    label: "Pricing",
+    tone: "blue",
+    icon: Tag,
+    status: "MOCK",
+  },
+];
+
+const PORTFOLIO: TileDef[] = [
   {
     to: "/stores",
     label: "Stores",
@@ -230,10 +257,19 @@ export function HomePage() {
           </div>
         </section>
 
+        <section className="tile-section">
+          <p className="section-label">Portfolio</p>
+          <div className="tile-grid">
+            {PORTFOLIO.map((t) => (
+              <Tile key={t.to} tile={t} />
+            ))}
+          </div>
+        </section>
+
         <p className="home-honesty">
           Tile status badges are honesty labels. Billing for extra stores is
-          MOCK — no POS, lottery filing, tax filing, VMS, bank feed, or Stripe
-          charge is claimed live.
+          MOCK — no POS, lottery filing, tax filing, VMS, bank feed, Stripe, or
+          fuel price publish is claimed live.
         </p>
       </div>
 

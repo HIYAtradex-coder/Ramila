@@ -14,6 +14,9 @@ const DEPARTMENTS = [
   { id: "expenses", name: "Expenses", tile: "Expenses" },
   { id: "inventory", name: "Inventory", tile: "Inventory" },
   { id: "invoices", name: "Invoices", tile: "Invoices" },
+  { id: "vendors", name: "Vendors / suppliers", tile: "Vendors" },
+  { id: "orders", name: "Orders / POs / pickup", tile: "Orders" },
+  { id: "pricing", name: "Pricing / price books", tile: "Pricing" },
   { id: "multi-store", name: "Multi-store portfolio", tile: "Stores" },
 ] as const;
 
