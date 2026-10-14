@@ -24,7 +24,18 @@ Audited against repository code after pilot scaffold (not aspirational).
 | AI/LLM auto-post inventory | N/A (forbidden) | Explicitly not implemented; proposals never post |
 | Idempotent approve | WORKING | `idempotencyKey` on invoice |
 | Duplicate invoice hash guard | WORKING | `contentHash` uniqueness check |
-| Owner web console | PARTIAL | Login, store select, propose, approve, list stock |
+| Owner web console | PARTIAL | iPhone-style home tiles + 9 modules; login + store scope |
+| Owner home tile grid | WORKING | `/` — POS, Reports, Lottery, Tax, Employees, Cameras, Expenses, Inventory, Invoices |
+| Shared capture tools (copy/cut/paste/scan/camera) | WORKING | Device clipboard + local file/camera; not hardware scanner/VMS |
+| AI proposal assist per tile | MOCK | Checklists/summaries only; never posts inventory/money/payroll |
+| POS module UI | MISSING | Stub route `/pos`; no vendor connected |
+| Daily reports module | PARTIAL | `/reports` — live inventory/invoice counts; sales KPIs UNKNOWN |
+| Lottery module UI | MOCK | `/lottery` workpaper shell; not a filing |
+| Sales tax monthly module | MOCK | `/sales-tax` workpaper shell; not a filing |
+| Employee management module | PARTIAL | `/employees` — memberships live; payroll/schedule/onboarding MOCK |
+| Expense management module | MOCK | `/expenses` shell; no bank/card feed |
+| Inventory module UI | WORKING | `/inventory` wired to store inventory API |
+| Invoice module UI | WORKING | `/invoices` propose → PIN approve-before-post |
 | Expo staff app | PARTIAL | Bootable shell only |
 | Expo customer rewards/order app | PARTIAL | Bootable shell only |
 | Franchise profiles / recipes / BOMs | MISSING | StoreType enum + configJson hook only |
@@ -33,11 +44,12 @@ Audited against repository code after pilot scaffold (not aspirational).
 | Retail POS baskets / age checks | MISSING | — |
 | Franchise/POS connector registry | MISSING | Writes must default off when added |
 | Loyalty / marketplace ordering | MISSING | — |
-| Owner daily command center reports | MISSING | — |
-| Cameras / Live Wall / UniFi | BLOCKED | Needs owner-confirmed VMS + credentials |
+| Owner daily command center reports | PARTIAL | Tile summary only; full KPI command center still MISSING sales feeds |
+| Cameras / Live Wall / UniFi | BLOCKED | `/cameras` placeholder; needs owner-confirmed VMS + credentials |
+| Payroll connector (ADP/Gusto/etc.) | MISSING | UI stub only; no connected claim |
 | Possible-loss AI correlation | MISSING | — |
 | Evidence preserve/export | MISSING | — |
-| AI bots / workers / outbox | MISSING | — |
+| AI bots / workers / outbox | MISSING | In-UI proposal helpers only (MOCK) |
 | OpenAPI publish | MISSING | Contracts exist; OpenAPI not generated |
 | Threat model / privacy docs | MISSING | Deliverable backlog |
 | Production deployment | MISSING | Local/dev only |
