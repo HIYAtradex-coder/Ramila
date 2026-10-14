@@ -10,6 +10,8 @@ import billingRoutes from "./routes/billing.js";
 import inventoryRoutes from "./routes/inventory.js";
 import invoiceRoutes from "./routes/invoices.js";
 import auditRoutes from "./routes/audit.js";
+import expenseRoutes from "./routes/expenses.js";
+import profitabilityRoutes from "./routes/profitability.js";
 
 export type BuildAppOptions = {
   prisma?: PrismaClient;
@@ -37,6 +39,8 @@ export async function buildApp(opts: BuildAppOptions = {}) {
   await app.register(inventoryRoutes);
   await app.register(invoiceRoutes);
   await app.register(auditRoutes);
+  await app.register(expenseRoutes);
+  await app.register(profitabilityRoutes);
 
   return app;
 }

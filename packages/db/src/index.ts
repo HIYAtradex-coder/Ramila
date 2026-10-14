@@ -11,6 +11,8 @@ export type {
   InventoryMovement,
   InvoiceDocument,
   InvoiceLine,
+  SalesDaily,
+  OperatingExpense,
 } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { hiyaPrisma?: PrismaClient };

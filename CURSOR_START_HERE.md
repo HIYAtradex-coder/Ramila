@@ -39,8 +39,17 @@ Home tiles map: Project store `docs/home-tiles.md`
 1. Harden identity (OIDC/passkeys/MFA, refresh revocation, rate limits)
 2. Inventory counts (opening/cycle) with offline scan queue contracts
 3. Invoice ingest pipeline interfaces (MIME validation, provenance) — still proposal-only until approve
-4. Owner daily report read models from posted facts
+4. Certified POS sales adapters feeding `SalesDaily` (writes off until partner path)
 5. Connector registry stubs with capability reporting (writes off)
+
+## Profitability slice (landed)
+
+- Schema: `SalesDaily`, `OperatingExpense` (+ migration)
+- APIs: `POST /v1/expenses`, `POST /v1/expenses/:id/post`, `POST /v1/expenses/:id/void`, `GET /v1/reports/profitability`, `GET /v1/reports/profitability/analysis` (proposal-only)
+- UI: owner-web `/profitability` + `/expenses`; staff-mobile `app/profitability.tsx`
+- Rules: GP from `SalesDaily.grossProfitMinor` (COGS included); purchases cash-flow only; draft never affects net; incomplete ≠ zero
+- Bank-statement hook only: `sourceType=BANK_STATEMENT` + optional `attachmentId` (no FK / no attachment UI here)
+- Doc: Project store `docs/profitability.md`
 
 ## Local commands
 

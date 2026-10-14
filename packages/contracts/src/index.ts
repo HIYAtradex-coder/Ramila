@@ -24,6 +24,10 @@ export const Capability = z.enum([
   "invoice:review",
   "invoice:approve",
   "audit:read",
+  "expense:draft",
+  "expense:post",
+  "expense:void",
+  "report:profitability",
 ]);
 export type Capability = z.infer<typeof Capability>;
 
@@ -40,6 +44,10 @@ export const ROLE_CAPABILITIES: Record<StaffRole, readonly Capability[]> = {
     "invoice:review",
     "invoice:approve",
     "audit:read",
+    "expense:draft",
+    "expense:post",
+    "expense:void",
+    "report:profitability",
   ],
   manager: [
     "org:read",
@@ -52,6 +60,8 @@ export const ROLE_CAPABILITIES: Record<StaffRole, readonly Capability[]> = {
     "invoice:review",
     "invoice:approve",
     "audit:read",
+    "expense:draft",
+    "report:profitability",
   ],
   bookkeeper: [
     "org:read",
@@ -59,6 +69,9 @@ export const ROLE_CAPABILITIES: Record<StaffRole, readonly Capability[]> = {
     "inventory:read",
     "invoice:review",
     "audit:read",
+    "expense:draft",
+    "expense:post",
+    "report:profitability",
   ],
   receiver: [
     "store:read",
@@ -68,7 +81,14 @@ export const ROLE_CAPABILITIES: Record<StaffRole, readonly Capability[]> = {
     "invoice:review",
   ],
   cashier: ["store:read", "inventory:read"],
-  auditor: ["org:read", "store:read", "inventory:read", "invoice:review", "audit:read"],
+  auditor: [
+    "org:read",
+    "store:read",
+    "inventory:read",
+    "invoice:review",
+    "audit:read",
+    "report:profitability",
+  ],
 };
 
 export const StoreType = z.enum([
@@ -227,3 +247,119 @@ export const AddStoreRequest = z.object({
   acceptMockBilling: z.literal(true),
 });
 export type AddStoreRequest = z.infer<typeof AddStoreRequest>;
+
+/** Operating expense categories for profitability reporting. */
+export const ExpenseCategory = z.enum([
+  "electricity",
+  "gas_utility",
+  "water_sewer",
+  "internet_phone",
+  "pos_processing_fees",
+  "credit_card_fees",
+  "rent_lease",
+  "payroll_wages",
+  "payroll_taxes",
+  "insurance",
+  "repairs_maintenance",
+  "cleaning_pest_control",
+  "security_monitoring",
+  "licenses_permits",
+  "accounting_legal",
+  "bank_fees",
+  "advertising_marketing",
+  "delivery_freight",
+  "store_supplies",
+  "waste_shrink",
+  "property_tax",
+  "other_miscellaneous",
+]);
+export type ExpenseCategory = z.infer<typeof ExpenseCategory>;
+
+export const ExpenseStatus = z.enum(["draft", "posted", "voided"]);
+export type ExpenseStatus = z.infer<typeof ExpenseStatus>;
+
+export const ExpenseSourceType = z.enum([
+  "MANUAL",
+  "SCAN_PROPOSAL",
+  "IMPORT",
+  /** Linked from a bank-statement attachment pipeline (sibling feature) — still draft until human post */
+  "BANK_STATEMENT",
+]);
+export type ExpenseSourceType = z.infer<typeof ExpenseSourceType>;
+
+export const CreateExpenseRequest = z.object({
+  storeId: z.string().uuid(),
+  category: ExpenseCategory,
+  amountMinor: MoneyMinor.positive(),
+  incurredDate: z
+    .string()
+    .datetime()
+    .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+  description: z.string().min(1).max(500),
+  sourceType: ExpenseSourceType.default("MANUAL"),
+  idempotencyKey: z.string().min(8).max(128),
+  vendorName: z.string().max(200).optional(),
+  paymentMethod: z.string().max(64).optional(),
+  receiptUrl: z.string().url().max(1000).optional(),
+  sourceReference: z.string().max(200).optional(),
+  /**
+   * Optional opaque id for a bank-statement / document attachment owned by the
+   * attachment pipeline. No FK here — attachment storage lands separately.
+   * AI/bank import may set this; posting still requires owner/bookkeeper.
+   */
+  attachmentId: z.string().uuid().optional(),
+  recurring: z.boolean().optional(),
+});
+export type CreateExpenseRequest = z.infer<typeof CreateExpenseRequest>;
+
+export const PostExpenseRequest = z.object({
+  idempotencyKey: z.string().min(8).max(128).optional(),
+});
+export type PostExpenseRequest = z.infer<typeof PostExpenseRequest>;
+
+export const VoidExpenseRequest = z.object({
+  reason: z.string().min(3).max(500),
+});
+export type VoidExpenseRequest = z.infer<typeof VoidExpenseRequest>;
+
+export const ExpenseView = z.object({
+  id: z.string().uuid(),
+  storeId: z.string().uuid(),
+  category: ExpenseCategory,
+  amountMinor: MoneyMinor,
+  incurredDate: z.string(),
+  description: z.string(),
+  sourceType: ExpenseSourceType,
+  status: ExpenseStatus,
+  vendorName: z.string().nullable().optional(),
+  paymentMethod: z.string().nullable().optional(),
+  receiptUrl: z.string().nullable().optional(),
+  sourceReference: z.string().nullable().optional(),
+  /** Opaque attachment id when sourceType is BANK_STATEMENT (or other ingest) */
+  attachmentId: z.string().uuid().nullable().optional(),
+  recurring: z.boolean(),
+  postedAt: z.string().nullable().optional(),
+  voidedAt: z.string().nullable().optional(),
+  voidReason: z.string().nullable().optional(),
+  createdAt: z.string(),
+});
+export type ExpenseView = z.infer<typeof ExpenseView>;
+
+export const ProfitabilityPeriod = z.enum([
+  "WEEKLY",
+  "BIWEEKLY",
+  "MONTHLY",
+  "YEARLY",
+]);
+export type ProfitabilityPeriod = z.infer<typeof ProfitabilityPeriod>;
+
+export const ProfitabilityQuery = z.object({
+  period: ProfitabilityPeriod.default("WEEKLY"),
+  /** Store scope; omit for all stores the actor can access */
+  locationId: z.string().uuid().optional(),
+  anchor: z.string().optional(),
+});
+export type ProfitabilityQuery = z.infer<typeof ProfitabilityQuery>;
+
+export const ACCOUNTING_NOTICE =
+  "Gross profit uses SalesDaily.grossProfit (COGS already included). Posted inventory purchases are shown for cash-flow only and are never subtracted again. Draft expenses never change net profit. Missing sales/expense feeds are marked incomplete — not verified zeros.";

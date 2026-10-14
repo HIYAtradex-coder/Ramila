@@ -6,6 +6,7 @@ import {
   ClipboardList,
   FileText,
   LayoutGrid,
+  LineChart,
   Package,
   Receipt,
   ShoppingCart,
@@ -41,6 +42,13 @@ const DAILY: TileDef[] = [
     icon: ClipboardList,
     status: "PARTIAL",
   },
+  {
+    to: "/profitability",
+    label: "P&L",
+    tone: "green",
+    icon: LineChart,
+    status: "PARTIAL",
+  },
   { to: "/lottery", label: "Lotto", tone: "teal", icon: Ticket, status: "MOCK" },
   {
     to: "/sales-tax",
@@ -71,7 +79,7 @@ const MANAGE: TileDef[] = [
     label: "Expenses",
     tone: "gold",
     icon: Wallet,
-    status: "MOCK",
+    status: "PARTIAL",
   },
   {
     to: "/inventory",

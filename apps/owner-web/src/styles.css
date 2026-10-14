@@ -917,6 +917,206 @@ th {
   }
 }
 
+.period-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 0.85rem;
+}
+
+.period-btn,
+.chip-btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--elevated);
+  color: var(--foreground);
+  border-radius: 0.75rem;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.period-btn--on,
+.chip-btn--on {
+  border-color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 16%, var(--elevated));
+  color: var(--accent);
+}
+
+.scope-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 1rem;
+}
+
+.net-tile {
+  margin: 0 0 0.85rem;
+  padding: 1.15rem 1.1rem;
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 35%, var(--border));
+  background:
+    radial-gradient(
+      120% 80% at 10% 0%,
+      color-mix(in oklab, var(--accent) 22%, transparent),
+      transparent 55%
+    ),
+    var(--surface);
+  animation: rise-in 420ms ease-out both;
+}
+
+.net-tile--neg {
+  border-color: color-mix(in oklab, var(--danger) 40%, var(--border));
+  background:
+    radial-gradient(
+      120% 80% at 10% 0%,
+      color-mix(in oklab, var(--danger) 18%, transparent),
+      transparent 55%
+    ),
+    var(--surface);
+}
+
+.net-tile-label {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.net-tile-value {
+  margin: 0.35rem 0 0.2rem;
+  font-size: clamp(1.85rem, 6vw, 2.45rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--foreground);
+  line-height: 1.1;
+}
+
+.net-tile--neg .net-tile-value {
+  color: var(--danger);
+}
+
+.net-tile-meta {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.draft-warn {
+  margin: 0 0 0.85rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--orange) 45%, var(--border));
+  background: color-mix(in oklab, var(--orange) 12%, var(--surface));
+  color: #f0c9a0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  animation: rise-in 380ms ease-out both;
+}
+
+.draft-warn--incomplete {
+  border-color: color-mix(in oklab, var(--danger) 40%, var(--border));
+  background: color-mix(in oklab, var(--danger) 10%, var(--surface));
+  color: #f5b4ae;
+}
+
+.profit-cards .summary-cell {
+  animation: rise-in 480ms ease-out both;
+}
+
+.profit-cards .summary-cell:nth-child(2) {
+  animation-delay: 40ms;
+}
+.profit-cards .summary-cell:nth-child(3) {
+  animation-delay: 80ms;
+}
+.profit-cards .summary-cell:nth-child(4) {
+  animation-delay: 120ms;
+}
+
+.expense-break li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+}
+
+.rise-block {
+  animation: rise-in 500ms ease-out both;
+}
+
+.primary-btn {
+  appearance: none;
+  border: 0;
+  border-radius: 0.85rem;
+  padding: 0.7rem 1rem;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.primary-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ok {
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.plan-panel {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.plan-panel h2 {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.auto-analysis-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.auto-analysis-head h2 {
+  margin: 0;
+}
+
+.auto-analysis-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.analysis-item--attention strong {
+  color: #f0c9a0;
+}
+
+.analysis-item--incomplete strong {
+  color: #f5b4ae;
+}
+
+.analysis-item--info strong {
+  color: var(--accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
