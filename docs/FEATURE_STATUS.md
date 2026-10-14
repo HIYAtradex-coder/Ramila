@@ -24,12 +24,18 @@ Audited against repository code after pilot scaffold (not aspirational).
 | AI/LLM auto-post inventory | N/A (forbidden) | Explicitly not implemented; proposals never post |
 | Idempotent approve | WORKING | `idempotencyKey` on invoice |
 | Duplicate invoice hash guard | WORKING | `contentHash` uniqueness check |
-| Owner web console | PARTIAL | iPhone-style home tiles + 9 modules; login + store scope |
-| Owner home tile grid | WORKING | `/` — 13 tiles incl. Vendors, Orders, Pricing, Multi-store |
+| Owner web console | PARTIAL | Daily Station home + module tiles; login + store scope |
+| Owner home · All stores summary | PARTIAL | `/` default tab — cross-store inventory/invoice rollup; sales/cash/lottery UNKNOWN ≠ 0 |
+| Owner home tile grid | WORKING | `/` Modules tab — 18 tiles incl. Approvals, Cash, Attention, Expiry, Price check |
+| Approvals queue UI | PARTIAL | `/approvals` — cross-store pending invoice proposals; PIN post on Invoices |
+| Cash / ATM workpaper UI | MOCK | `/cash` — custody shell; no bank/ATM vendor |
+| Attention / Smart Queue UI | MOCK | `/attention` — live invoice rows + DEMO possible-issue proposals |
+| Expiry / lots UI | MOCK | `/expiry` — date-code shell; lot ledger MISSING |
+| Price check (read-only) UI | MOCK | `/price-check` — no basket/void; price UNKNOWN without itemRead |
 | Vendor directory UI | MOCK | `/vendors` — categories + invoice name link; no EDI/portal |
 | Orders / PO / pickup UI | MOCK | `/orders` — sections only; no marketplace/DoorDash/Wawa |
 | Pricing / price books UI | MOCK | `/pricing` — proposals only; publish writes OFF; no FPC vendor |
-| Multi-store portfolio UI | PARTIAL | Membership list + switch; rollup KPIs UNKNOWN; no vendor sync claim |
+| Multi-store portfolio UI | PARTIAL | Membership list + switch; Home All-stores rollup; no vendor sync claim |
 | Org store-seat plan (base 1 + $100/mo) | PARTIAL | `OrganizationPlan` + `/billing/plan` + `POST /stores`; billingMode MOCK only |
 | Stripe / real subscription charge | MISSING | Explicitly not wired — MOCK ledger labels required |
 | Shared capture tools (copy/cut/paste/scan/camera) | WORKING | Device clipboard + local file/camera; not hardware scanner/VMS |
@@ -50,7 +56,7 @@ Audited against repository code after pilot scaffold (not aspirational).
 | Retail POS baskets / age checks | MISSING | — |
 | Franchise/POS connector registry | MISSING | Writes must default off when added |
 | Loyalty / marketplace ordering | MISSING | — |
-| Owner daily command center reports | PARTIAL | Tile summary only; full KPI command center still MISSING sales feeds |
+| Owner daily command center reports | PARTIAL | Home All-stores + Daily tile; sales KPIs still MISSING without POS feeds |
 | Cameras / Live Wall / UniFi | BLOCKED | `/cameras` placeholder; needs owner-confirmed VMS + credentials |
 | Payroll connector (ADP/Gusto/etc.) | MISSING | UI stub only; no connected claim |
 | Possible-loss AI correlation | MISSING | — |

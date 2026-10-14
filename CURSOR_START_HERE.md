@@ -10,7 +10,7 @@ Requirements source: Project store Master Prompt (consolidated brief). This repo
 
 ## Current reality
 
-Pilot scaffold + thin vertical slice is landed. Owner web now has an **iPhone-style Home tile grid** (13 modules, Daily Station v2 chrome) with shared device capture tools and DEMO AI proposal helpers. Most product backends are still **MISSING/MOCK**. Do not claim vendor integrations exist.
+Pilot scaffold + thin vertical slice is landed. Owner web **Home** defaults to an **All-stores portfolio summary** (UNKNOWN ≠ 0; DEMO DATA honesty) plus a **Modules** tab with an iPhone-style tile grid (18 modules, Daily Station v2 chrome), shared device capture tools, and DEMO AI proposal helpers. Most product backends are still **MISSING/MOCK**. Do not claim vendor integrations exist.
 
 Truth table: [docs/FEATURE_STATUS.md](./docs/FEATURE_STATUS.md)  
 Home tiles map: Project store `docs/home-tiles.md`
@@ -69,6 +69,7 @@ pnpm dev:web
 | Invoice post rules | `packages/api/src/services/invoice.ts` |
 | Schema | `packages/db/prisma/schema.prisma` |
 | Owner UI / home tiles | `apps/owner-web/src/pages/HomePage.tsx` + `pages/*` |
+| All-stores rollup | `apps/owner-web/src/lib/portfolio-summary.ts` |
 | Shared capture tools | `apps/owner-web/src/components/ModuleWorkspace.tsx` |
 | AI proposal helpers | `apps/owner-web/src/lib/ai-assist.ts` |
 | Status matrix | `docs/FEATURE_STATUS.md` |

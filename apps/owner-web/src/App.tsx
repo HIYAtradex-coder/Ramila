@@ -15,6 +15,11 @@ import { MultiStorePage } from "./pages/MultiStorePage";
 import { VendorsPage } from "./pages/VendorsPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { PricingPage } from "./pages/PricingPage";
+import { ApprovalsPage } from "./pages/ApprovalsPage";
+import { CashAtmPage } from "./pages/CashAtmPage";
+import { AttentionPage } from "./pages/AttentionPage";
+import { ExpiryPage } from "./pages/ExpiryPage";
+import { PriceCheckPage } from "./pages/PriceCheckPage";
 
 export function App() {
   return (
@@ -27,14 +32,19 @@ export function App() {
           <Route path="/reports" element={<DailyReportsPage />} />
           <Route path="/lottery" element={<LotteryPage />} />
           <Route path="/sales-tax" element={<SalesTaxPage />} />
+          <Route path="/cash" element={<CashAtmPage />} />
           <Route path="/employees" element={<EmployeesPage />} />
           <Route path="/cameras" element={<CamerasPage />} />
           <Route path="/expenses" element={<ExpensesPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/attention" element={<AttentionPage />} />
+          <Route path="/expiry" element={<ExpiryPage />} />
           <Route path="/invoices" element={<InvoicesPage />} />
+          <Route path="/approvals" element={<ApprovalsPage />} />
           <Route path="/vendors" element={<VendorsPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/price-check" element={<PriceCheckPage />} />
           <Route path="/stores" element={<MultiStorePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
