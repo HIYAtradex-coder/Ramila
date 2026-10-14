@@ -16,7 +16,12 @@ export type AiDepartment =
   | "multi-store"
   | "vendors"
   | "orders"
-  | "pricing";
+  | "pricing"
+  | "approvals"
+  | "cash-atm"
+  | "attention"
+  | "expiry"
+  | "price-check";
 
 export type AiProposal = {
   id: string;
@@ -260,6 +265,97 @@ const PROPOSALS: Record<AiDepartment, Omit<AiProposal, "id" | "demo">> = {
         "DEMO proposals · price book MOCK · writes OFF · no Verifone/Gilbarco FPC",
       requiresHumanApprove: true,
     },
+  approvals: {
+    department: "approvals",
+    title: "Approval queue walkthrough",
+    summary:
+      "Propose an order to clear human gates. AI never posts inventory or money.",
+    checklist: [
+      "Review vendor, invoice #, and line eaches before PIN",
+      "Clear older proposals first when backlog spans stores",
+      "Switch active store before opening Invoices approve",
+      "Leave sales/cash approvals UNKNOWN without those feeds",
+    ],
+    possibleIssues: [
+      "Possible duplicate proposal if same invoice scanned twice — API hash guards; still verify",
+      "Possible wrong store focus if portfolio queue mixed — confirm store code",
+    ],
+    honesty: "DEMO proposals · invoice queue may be live · AI never posts",
+    requiresHumanApprove: true,
+  },
+  "cash-atm": {
+    department: "cash-atm",
+    title: "Cash / ATM custody checklist",
+    summary:
+      "Suggest dual-control and deposit steps. No bank or ATM vendor totals are invented.",
+    checklist: [
+      "Photograph deposit bag seal (device camera)",
+      "Record bag # and courier name in notes",
+      "Require dual control before ATM cassette load in production",
+      "Hold bank-confirmed as UNKNOWN until feed exists",
+    ],
+    possibleIssues: [
+      "Possible unmatched deposit if bag photo missing — human follow up",
+      "Possible ATM load without second person — policy risk, not guilt claim",
+    ],
+    honesty: "DEMO proposals · MOCK workpaper · no bank/ATM connector",
+    requiresHumanApprove: true,
+  },
+  attention: {
+    department: "attention",
+    title: "Attention triage",
+    summary:
+      "Rank review items with neutral language. Never claim employee fraud from DEMO signals.",
+    checklist: [
+      "Clear live invoice approvals first",
+      "Open Expiry / Cash shells only as workpapers",
+      "Defer camera correlation until VMS is connected",
+      "Acknowledge DEMO rows separately from live API rows",
+    ],
+    possibleIssues: [
+      "Possible missed scan — needs human review when POS+camera exist",
+      "Possible incomplete close if invoices remain unposted",
+    ],
+    honesty:
+      "DEMO proposals · anomaly ≠ guilt · cameras BLOCKED without VMS",
+    requiresHumanApprove: true,
+  },
+  expiry: {
+    department: "expiry",
+    title: "Expiry / lot review",
+    summary:
+      "Propose date-code walk order. AI never posts quarantine, disposal, or vendor credits.",
+    checklist: [
+      "Scan GS1 / date codes with device tools (decode PENDING)",
+      "Prioritize dairy, meat, and open packs when ledger exists",
+      "Draft vendor credit only after human count confirm",
+      "Keep expiring counts UNKNOWN until lot ledger lands",
+    ],
+    possibleIssues: [
+      "Possible missed date code on multi-pack — human verify",
+      "Possible credit claim without photo evidence — attach device capture",
+    ],
+    honesty: "DEMO proposals · lot ledger MISSING · AI never posts stock",
+    requiresHumanApprove: true,
+  },
+  "price-check": {
+    department: "price-check",
+    title: "Price check coaching",
+    summary:
+      "Remind that Price Check is read-only. No basket, void, or inventory movement.",
+    checklist: [
+      "Scan or paste UPC only — do not open a sale",
+      "Treat UNKNOWN price as missing connector, not $0.00",
+      "Escalate shelf mismatches to Pricing proposals (human approve)",
+      "Never publish from Price Check",
+    ],
+    possibleIssues: [
+      "Possible shelf-tag mismatch — human verify; no auto price write",
+    ],
+    honesty:
+      "DEMO proposals · read-only · no POS itemRead claimed · writes OFF",
+    requiresHumanApprove: true,
+  },
 };
 
 export function proposeForDepartment(department: AiDepartment): AiProposal {

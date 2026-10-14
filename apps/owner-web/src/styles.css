@@ -606,6 +606,77 @@ button:not(:disabled):active {
   color: var(--accent);
 }
 
+.summary-value--unknown {
+  color: var(--orange);
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+}
+
+.home-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border-radius: 999px;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+}
+
+.home-tab {
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.home-tab--on {
+  background: color-mix(in oklab, var(--accent) 18%, var(--surface));
+  color: var(--accent);
+}
+
+.portfolio-home {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.attention-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.attention-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--foreground);
+  animation: rise-in 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.attention-item strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.attention-item .muted {
+  margin: 0.25rem 0 0.45rem;
+}
+
+.attention-item--live {
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--border));
+  background: color-mix(in oklab, var(--accent) 8%, var(--surface));
+}
+
 .summary-label {
   font-size: 0.8rem;
   font-weight: 500;
