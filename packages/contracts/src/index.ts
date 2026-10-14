@@ -23,6 +23,10 @@ export const Capability = z.enum([
   "invoice:ingest",
   "invoice:review",
   "invoice:approve",
+  "payment:record",
+  "payment:read",
+  "attachment:upload",
+  "attachment:read",
   "audit:read",
 ]);
 export type Capability = z.infer<typeof Capability>;
@@ -39,6 +43,10 @@ export const ROLE_CAPABILITIES: Record<StaffRole, readonly Capability[]> = {
     "invoice:ingest",
     "invoice:review",
     "invoice:approve",
+    "payment:record",
+    "payment:read",
+    "attachment:upload",
+    "attachment:read",
     "audit:read",
   ],
   manager: [
@@ -51,6 +59,10 @@ export const ROLE_CAPABILITIES: Record<StaffRole, readonly Capability[]> = {
     "invoice:ingest",
     "invoice:review",
     "invoice:approve",
+    "payment:record",
+    "payment:read",
+    "attachment:upload",
+    "attachment:read",
     "audit:read",
   ],
   bookkeeper: [
@@ -58,6 +70,10 @@ export const ROLE_CAPABILITIES: Record<StaffRole, readonly Capability[]> = {
     "store:read",
     "inventory:read",
     "invoice:review",
+    "payment:record",
+    "payment:read",
+    "attachment:upload",
+    "attachment:read",
     "audit:read",
   ],
   receiver: [
@@ -68,7 +84,15 @@ export const ROLE_CAPABILITIES: Record<StaffRole, readonly Capability[]> = {
     "invoice:review",
   ],
   cashier: ["store:read", "inventory:read"],
-  auditor: ["org:read", "store:read", "inventory:read", "invoice:review", "audit:read"],
+  auditor: [
+    "org:read",
+    "store:read",
+    "inventory:read",
+    "invoice:review",
+    "payment:read",
+    "attachment:read",
+    "audit:read",
+  ],
 };
 
 export const StoreType = z.enum([
@@ -227,3 +251,160 @@ export const AddStoreRequest = z.object({
   acceptMockBilling: z.literal(true),
 });
 export type AddStoreRequest = z.infer<typeof AddStoreRequest>;
+
+/** Vendor payout method — ach/card are honesty stubs, not live bank rails. */
+export const VendorPaymentMethod = z.enum([
+  "cash",
+  "check",
+  "ach_stub",
+  "card_stub",
+  "other",
+]);
+export type VendorPaymentMethod = z.infer<typeof VendorPaymentMethod>;
+
+export const VendorPaymentStatus = z.enum(["recorded", "voided"]);
+export type VendorPaymentStatus = z.infer<typeof VendorPaymentStatus>;
+
+export const RecordVendorPaymentRequest = z
+  .object({
+    storeId: z.string().uuid(),
+    vendorName: z.string().min(1).max(200),
+    method: VendorPaymentMethod,
+    amountMinor: MoneyMinor.positive(),
+    currency: z.string().length(3).default("USD"),
+    checkNumber: z.string().min(1).max(64).optional(),
+    checkDate: z
+      .string()
+      .datetime()
+      .or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+      .optional(),
+    memo: z.string().max(500).optional(),
+    bankStatementAttachmentId: z.string().uuid().optional(),
+    /** Soft ref — does not create/post OperatingExpense */
+    linkedExpenseId: z.string().uuid().optional(),
+    idempotencyKey: z.string().min(8).max(128),
+  })
+  .superRefine((val, ctx) => {
+    if (val.method === "check") {
+      if (!val.checkNumber) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "checkNumber required for check payments",
+          path: ["checkNumber"],
+        });
+      }
+      if (!val.checkDate) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "checkDate required for check payments",
+          path: ["checkDate"],
+        });
+      }
+    }
+  });
+export type RecordVendorPaymentRequest = z.infer<typeof RecordVendorPaymentRequest>;
+
+export const VendorPaymentView = z.object({
+  id: z.string().uuid(),
+  storeId: z.string().uuid(),
+  vendorName: z.string(),
+  method: VendorPaymentMethod,
+  amountMinor: MoneyMinor,
+  currency: z.string(),
+  status: VendorPaymentStatus,
+  checkNumber: z.string().nullable().optional(),
+  checkDate: z.string().nullable().optional(),
+  memo: z.string().nullable().optional(),
+  bankStatementAttachmentId: z.string().uuid().nullable().optional(),
+  linkedExpenseId: z.string().uuid().nullable().optional(),
+  moneyPostedByAi: z.literal(false),
+  honesty: z.string(),
+});
+export type VendorPaymentView = z.infer<typeof VendorPaymentView>;
+
+export const ALLOWED_ATTACHMENT_MIME = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+] as const;
+
+export const UploadBankStatementRequest = z.object({
+  storeId: z.string().uuid(),
+  fileName: z.string().min(1).max(260),
+  mimeType: z.enum(ALLOWED_ATTACHMENT_MIME),
+  /** Raw file bytes as base64 (pilot local storage — not a bank API upload) */
+  contentBase64: z.string().min(8).max(12_000_000),
+  periodLabel: z.string().max(64).optional(),
+  note: z.string().max(500).optional(),
+  linkedVendorPaymentId: z.string().uuid().optional(),
+  /** Soft ref for future OperatingExpense — reference only */
+  linkedExpenseId: z.string().uuid().optional(),
+});
+export type UploadBankStatementRequest = z.infer<typeof UploadBankStatementRequest>;
+
+export const BankStatementAttachmentView = z.object({
+  id: z.string().uuid(),
+  storeId: z.string().uuid(),
+  fileName: z.string(),
+  mimeType: z.string(),
+  byteSize: z.number().int().nonnegative(),
+  contentHash: z.string(),
+  periodLabel: z.string().nullable().optional(),
+  note: z.string().nullable().optional(),
+  linkedVendorPaymentId: z.string().uuid().nullable().optional(),
+  linkedExpenseId: z.string().uuid().nullable().optional(),
+  createdAt: z.string(),
+  bankSyncConnected: z.literal(false),
+  honesty: z.string(),
+});
+export type BankStatementAttachmentView = z.infer<typeof BankStatementAttachmentView>;
+
+/** Camera / file capture → DEMO AI field proposals → invoice proposal (never posts). */
+export const InvoiceScanProposeRequest = z.object({
+  storeId: z.string().uuid(),
+  fileName: z.string().min(1).max(260),
+  mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/heic", "application/pdf"]),
+  contentBase64: z.string().min(8).max(12_000_000),
+  /** When true, DEMO AI treats source as handwriting and forces needs_review */
+  handwriting: z.boolean().default(false),
+  captureSource: z.enum(["camera", "file", "mobile"]).default("camera"),
+  /** Optional human hints — never authorize posting */
+  vendorHint: z.string().max(200).optional(),
+  invoiceNumberHint: z.string().max(100).optional(),
+});
+export type InvoiceScanProposeRequest = z.infer<typeof InvoiceScanProposeRequest>;
+
+export const InvoiceScanProposeResponse = z.object({
+  invoiceId: z.string().uuid(),
+  status: InvoiceStatus,
+  vendorName: z.string(),
+  invoiceNumber: z.string(),
+  totalMinor: MoneyMinor,
+  lineCount: z.number().int(),
+  inventoryPosted: z.literal(false),
+  moneyPosted: z.literal(false),
+  requiresHumanReview: z.literal(true),
+  aiMode: z.enum(["DEMO_PRINT", "DEMO_HANDWRITING"]),
+  honesty: z.string(),
+  proposedLines: z.array(
+    z.object({
+      skuCode: z.string(),
+      description: z.string(),
+      quantityEaches: z.number().int(),
+      unitCostMinor: MoneyMinor,
+      confidence: z.number().int().min(0).max(100),
+    }),
+  ),
+});
+export type InvoiceScanProposeResponse = z.infer<typeof InvoiceScanProposeResponse>;
+
+/** MOCK stub only — never claim live Plaid/bank sync. */
+export const BankSyncStubView = z.object({
+  connected: z.literal(false),
+  provider: z.literal("none"),
+  mode: z.literal("MOCK"),
+  honesty: z.string(),
+});
+export type BankSyncStubView = z.infer<typeof BankSyncStubView>;

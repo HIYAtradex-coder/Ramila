@@ -18,6 +18,8 @@ model Organization {
   stores        Store[]
   auditEvents   AuditEvent[]
   invoices      InvoiceDocument[]
+  vendorPayments VendorPayment[]
+  bankStatementAttachments BankStatementAttachment[]
   /// Subscription seat plan — base 1 store included; extras billed MOCK until Stripe
   plan          OrganizationPlan?
 }
@@ -78,6 +80,8 @@ model Store {
   items        InventoryItem[]
   movements    InventoryMovement[]
   invoices     InvoiceDocument[]
+  vendorPayments VendorPayment[]
+  bankStatementAttachments BankStatementAttachment[]
 
   @@unique([organizationId, code])
 }
@@ -213,4 +217,68 @@ model InvoiceLine {
   invoice InvoiceDocument @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@unique([invoiceId, lineNumber])
+}
+
+/// Vendor cash / check (and honesty stubs). Append-only economic record; void via status + audit.
+/// Distinct from OperatingExpense (profitability worker) — soft-link via linkedExpenseId only.
+model VendorPayment {
+  id                        String    @id @default(uuid()) @db.Uuid
+  organizationId            String    @db.Uuid
+  storeId                   String    @db.Uuid
+  vendorName                String
+  /// cash | check | ach_stub | card_stub | other
+  method                    String
+  amountMinor               Int
+  currency                  String    @default("USD")
+  /// recorded | voided
+  status                    String    @default("recorded")
+  checkNumber               String?
+  checkDate                 DateTime? @db.Date
+  memo                      String?
+  bankStatementAttachmentId String?   @db.Uuid
+  /// Soft ref for future OperatingExpense — no FK (owned by profitability slice)
+  linkedExpenseId           String?   @db.Uuid
+  idempotencyKey            String?
+  recordedById              String?   @db.Uuid
+  voidedAt                  DateTime?
+  voidReason                String?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
+
+  organization              Organization             @relation(fields: [organizationId], references: [id])
+  store                     Store                    @relation(fields: [storeId], references: [id])
+  bankStatementAttachment   BankStatementAttachment? @relation(fields: [bankStatementAttachmentId], references: [id])
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([storeId, createdAt])
+  @@index([organizationId, vendorName])
+  @@index([status])
+}
+
+/// Bank statement PDF/image metadata. Upload-only — no Plaid/bank sync claimed.
+/// AI may later propose matched lines; never posts money. Links are references only.
+model BankStatementAttachment {
+  id                      String   @id @default(uuid()) @db.Uuid
+  organizationId          String   @db.Uuid
+  storeId                 String   @db.Uuid
+  fileName                String
+  mimeType                String
+  byteSize                Int
+  contentHash             String
+  /// Local filesystem key under API upload dir — not a bank connector token
+  storageKey              String
+  periodLabel             String?
+  note                    String?
+  /// Soft refs — reference only; never auto-post expenses or payments
+  linkedVendorPaymentId   String?  @db.Uuid
+  linkedExpenseId         String?  @db.Uuid
+  uploadedById            String?  @db.Uuid
+  createdAt               DateTime @default(now())
+
+  organization   Organization    @relation(fields: [organizationId], references: [id])
+  store          Store           @relation(fields: [storeId], references: [id])
+  vendorPayments VendorPayment[]
+
+  @@index([storeId, createdAt])
+  @@index([organizationId, contentHash])
 }

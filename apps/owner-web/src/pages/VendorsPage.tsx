@@ -22,10 +22,23 @@ type VendorRow = {
   contactName: string;
   phone: string;
   email: string;
-  /** Which stores this vendor typically serves — conceptual scopes */
   storeCodes: string[];
   notes: string;
   source: "directory-mock" | "invoice-derived";
+};
+
+type VendorPayment = {
+  id: string;
+  vendorName: string;
+  method: string;
+  amountMinor: number;
+  currency: string;
+  status: string;
+  checkNumber?: string | null;
+  checkDate?: string | null;
+  memo?: string | null;
+  moneyPostedByAi: false;
+  honesty: string;
 };
 
 const DIRECTORY_SEED: VendorRow[] = [
@@ -88,10 +101,32 @@ const CATEGORY_LABEL: Record<VendorCategory, string> = {
 export function VendorsPage() {
   const { token, storeId, memberships } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [payments, setPayments] = useState<VendorPayment[]>([]);
   const [filter, setFilter] = useState<VendorCategory | "all">("all");
   const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const [vendorName, setVendorName] = useState("Demo Vendor Co");
+  const [method, setMethod] = useState<"cash" | "check" | "ach_stub" | "card_stub">(
+    "cash",
+  );
+  const [amountDollars, setAmountDollars] = useState("25.00");
+  const [checkNumber, setCheckNumber] = useState("");
+  const [checkDate, setCheckDate] = useState(
+    () => new Date().toISOString().slice(0, 10),
+  );
+  const [memo, setMemo] = useState("");
 
   const store = memberships.find((m) => m.storeId === storeId);
+
+  async function refreshPayments(accessToken: string, activeStoreId: string) {
+    const res = await api<{ payments: VendorPayment[] }>(
+      `/stores/${activeStoreId}/vendor-payments`,
+      { token: accessToken },
+    );
+    setPayments(res.payments);
+  }
 
   useEffect(() => {
     if (!token || !storeId) return;
@@ -100,6 +135,9 @@ export function VendorsPage() {
       .catch((e) =>
         setError(e instanceof Error ? e.message : "Invoice link unavailable"),
       );
+    refreshPayments(token, storeId).catch((e) =>
+      setError(e instanceof Error ? e.message : "Payments unavailable"),
+    );
   }, [token, storeId]);
 
   const invoiceVendors = useMemo(() => {
@@ -142,12 +180,51 @@ export function VendorsPage() {
 
   if (!token) return <Navigate to="/login" replace />;
 
+  async function recordPayment() {
+    if (!token || !storeId) return;
+    setBusy(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const dollars = Number.parseFloat(amountDollars);
+      if (!Number.isFinite(dollars) || dollars <= 0) {
+        throw new Error("Enter a positive amount");
+      }
+      const amountMinor = Math.round(dollars * 100);
+      const payload: Record<string, unknown> = {
+        storeId,
+        vendorName,
+        method,
+        amountMinor,
+        memo: memo || undefined,
+        idempotencyKey: `web-pay-${Date.now()}`,
+      };
+      if (method === "check") {
+        payload.checkNumber = checkNumber;
+        payload.checkDate = checkDate;
+      }
+      const created = await api<VendorPayment>("/vendor-payments", {
+        method: "POST",
+        token,
+        body: JSON.stringify(payload),
+      });
+      setMessage(
+        `Recorded ${created.method} $${(created.amountMinor / 100).toFixed(2)} → ${created.vendorName}. AI did not post money. Audit appended.`,
+      );
+      await refreshPayments(token, storeId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Payment failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <ModuleShell
       title="Vendors"
-      eyebrow="Supplier directory"
-      status="MOCK"
-      note="Vendor directory is a local/workpaper shell. Invoice vendor names from the pilot API are listed when available for this store. No EDI, supplier portal, or “vendor connected” claim."
+      eyebrow="Supplier directory + payouts"
+      status="PARTIAL"
+      note="Directory remains MOCK (no EDI/portal). Cash/check vendor payments are WORKING with store-scoped authz and append-only audit. ach_stub/card_stub are honesty stubs — no bank rail connected."
     >
       <ModuleWorkspace
         fieldLabel="Vendor notes / contacts"
@@ -157,6 +234,107 @@ export function VendorsPage() {
       >
         <AiAssistPanel department="vendors" label="Vendors" />
       </ModuleWorkspace>
+
+      <div className="data-panel">
+        <h2>Vendor payments</h2>
+        <p className="muted">
+          Record cash payouts and checks for the active store. Append-only audit
+          on every record. No Plaid / ACH / card processor connected.
+        </p>
+        <div className="row" style={{ flexWrap: "wrap", gap: "0.75rem" }}>
+          <label style={{ margin: 0, flex: "1 1 160px" }}>
+            Vendor
+            <input
+              value={vendorName}
+              onChange={(e) => setVendorName(e.target.value)}
+            />
+          </label>
+          <label style={{ margin: 0, flex: "0 1 120px" }}>
+            Method
+            <select
+              value={method}
+              onChange={(e) =>
+                setMethod(e.target.value as typeof method)
+              }
+            >
+              <option value="cash">Cash</option>
+              <option value="check">Check</option>
+              <option value="ach_stub">ACH (stub)</option>
+              <option value="card_stub">Card (stub)</option>
+            </select>
+          </label>
+          <label style={{ margin: 0, flex: "0 1 110px" }}>
+            Amount ($)
+            <input
+              value={amountDollars}
+              onChange={(e) => setAmountDollars(e.target.value)}
+              inputMode="decimal"
+            />
+          </label>
+        </div>
+        {method === "check" && (
+          <div className="row" style={{ flexWrap: "wrap", gap: "0.75rem" }}>
+            <label style={{ margin: 0, flex: "1 1 120px" }}>
+              Check #
+              <input
+                value={checkNumber}
+                onChange={(e) => setCheckNumber(e.target.value)}
+              />
+            </label>
+            <label style={{ margin: 0, flex: "1 1 140px" }}>
+              Check date
+              <input
+                type="date"
+                value={checkDate}
+                onChange={(e) => setCheckDate(e.target.value)}
+              />
+            </label>
+          </div>
+        )}
+        <label>
+          Memo
+          <input value={memo} onChange={(e) => setMemo(e.target.value)} />
+        </label>
+        <button type="button" disabled={busy} onClick={() => void recordPayment()}>
+          Record payment
+        </button>
+        {message && <p className="muted">{message}</p>}
+        {error && <p className="err">{error}</p>}
+        <table>
+          <thead>
+            <tr>
+              <th>Vendor</th>
+              <th>Method</th>
+              <th>Check #</th>
+              <th>Date</th>
+              <th>Amount (¢)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {payments.map((p) => (
+              <tr key={p.id}>
+                <td>{p.vendorName}</td>
+                <td>{p.method}</td>
+                <td>{p.checkNumber ?? "—"}</td>
+                <td>{p.checkDate ?? "—"}</td>
+                <td>{p.amountMinor}</td>
+                <td>{p.status}</td>
+              </tr>
+            ))}
+            {payments.length === 0 && (
+              <tr>
+                <td colSpan={6} className="muted">
+                  No payments recorded for this store yet.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+        <p className="demo-tag">
+          WORKING cash/check · MOCK ach/card stubs · AI never posts money
+        </p>
+      </div>
 
       <div className="data-panel">
         <h2>Directory</h2>
@@ -219,13 +397,7 @@ export function VendorsPage() {
       </div>
 
       <div className="data-panel">
-        <h2>Invoices &amp; purchasing</h2>
-        <p className="muted">
-          Conceptual link only: invoice proposals carry a vendor name. Purchasing
-          / rebates / EDI remain MISSING. AI never posts stock from a vendor
-          catalog.
-        </p>
-        {error && <p className="err">{error}</p>}
+        <h2>Invoices &amp; bank statements</h2>
         <ul className="truth-list">
           <li>
             <strong>Invoice vendors (this store):</strong>{" "}
@@ -234,18 +406,18 @@ export function VendorsPage() {
               : "none loaded"}
           </li>
           <li>
-            <strong>EDI / supplier portal:</strong> not connected
+            <strong>Bank / Plaid sync:</strong> not connected (upload on Expenses)
           </li>
           <li>
-            <strong>PO / rebate claims:</strong> MISSING
+            <strong>EDI / supplier portal:</strong> not connected
           </li>
         </ul>
         <div className="row-links">
           <Link to="/invoices" className="text-link">
-            Open invoices →
+            Scan invoices →
           </Link>
-          <Link to="/stores" className="text-link">
-            Multi-store seats →
+          <Link to="/expenses" className="text-link">
+            Bank statement attach →
           </Link>
         </div>
       </div>

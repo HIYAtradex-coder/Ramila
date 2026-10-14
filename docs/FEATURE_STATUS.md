@@ -7,8 +7,8 @@ Audited against repository code after pilot scaffold (not aspirational).
 | Module / capability | Status | Evidence / notes |
 |---------------------|--------|------------------|
 | Monorepo scaffold (TS, pnpm workspaces) | WORKING | Root workspace + packages/apps |
-| Shared contracts (`@hiya/contracts`) | PARTIAL | Auth/capabilities/invoice Zod; not full OpenAPI yet |
-| PostgreSQL + Prisma schema | WORKING | Org/store/user/membership/audit/inventory/invoice |
+| Shared contracts (`@hiya/contracts`) | PARTIAL | Auth/capabilities/invoice/payment/attachment Zod; not full OpenAPI yet |
+| PostgreSQL + Prisma schema | WORKING | Org/store/user/membership/audit/inventory/invoice/VendorPayment/BankStatementAttachment |
 | Migrations + synthetic seed | WORKING | `prisma migrate`, `pnpm db:seed` |
 | Fastify API health | WORKING | `GET /health` |
 | Password login + JWT | PARTIAL | Local bcrypt login; no OIDC/passkeys/MFA yet |
@@ -19,14 +19,19 @@ Audited against repository code after pilot scaffold (not aspirational).
 | Inventory movements (append-only) | PARTIAL | Created on invoice post; no reversal UX yet |
 | Inventory counts / barcode / offline queue | MISSING | — |
 | Invoice manual proposal | WORKING | `POST /invoices/proposals` |
-| OCR / email ingest / vendor OCR | MISSING | No fabricated vendor; ingest interfaces not built |
+| Invoice camera/file AI scan propose | WORKING | `POST /invoices/scan/propose` — DEMO AI fields; never posts; feeds proposal pipeline |
+| OCR / email ingest / vendor OCR | PARTIAL | Device capture + DEMO AI propose only; no production OCR vendor / email ingest |
 | Human approve + step-up PIN post | WORKING | `POST /invoices/:id/approve`; PIN required |
-| AI/LLM auto-post inventory | N/A (forbidden) | Explicitly not implemented; proposals never post |
+| AI/LLM auto-post inventory | N/A (forbidden) | Explicitly not implemented; proposals/scans never post |
 | Idempotent approve | WORKING | `idempotencyKey` on invoice |
 | Duplicate invoice hash guard | WORKING | `contentHash` uniqueness check |
 | Owner web console | PARTIAL | iPhone-style home tiles + 9 modules; login + store scope |
 | Owner home tile grid | WORKING | `/` — 13 tiles incl. Vendors, Orders, Pricing, Multi-store |
 | Vendor directory UI | MOCK | `/vendors` — categories + invoice name link; no EDI/portal |
+| Vendor cash/check payments | WORKING | `POST /vendor-payments` + Vendors UI; store-scoped; append-only audit; ach/card = stubs |
+| Bank statement attachments | WORKING | Upload/list/metadata + soft links to payments/expense IDs; audit on upload |
+| Bank / Plaid sync | MOCK | `GET /bank-sync/status` always `connected:false` — upload only |
+| Bank statement AI match propose | MOCK | `POST /bank-statements/:id/propose-matches` — DEMO; never posts money |
 | Orders / PO / pickup UI | MOCK | `/orders` — sections only; no marketplace/DoorDash/Wawa |
 | Pricing / price books UI | MOCK | `/pricing` — proposals only; publish writes OFF; no FPC vendor |
 | Multi-store portfolio UI | PARTIAL | Membership list + switch; rollup KPIs UNKNOWN; no vendor sync claim |
@@ -39,10 +44,10 @@ Audited against repository code after pilot scaffold (not aspirational).
 | Lottery module UI | MOCK | `/lottery` workpaper shell; not a filing |
 | Sales tax monthly module | MOCK | `/sales-tax` workpaper shell; not a filing |
 | Employee management module | PARTIAL | `/employees` — memberships live; payroll/schedule/onboarding MOCK |
-| Expense management module | MOCK | `/expenses` shell; no bank/card feed |
+| Expense management module | PARTIAL | `/expenses` bank statement upload WORKING; OperatingExpense draft/post owned by profitability slice; no bank/card feed |
 | Inventory module UI | WORKING | `/inventory` wired to store inventory API |
-| Invoice module UI | WORKING | `/invoices` propose → PIN approve-before-post |
-| Expo staff app | PARTIAL | Bootable shell only |
+| Invoice module UI | WORKING | `/invoices` camera/file scan propose → PIN approve-before-post |
+| Expo staff app | PARTIAL | Bootable shell + invoice-scan DEMO AI propose screen |
 | Expo customer rewards/order app | PARTIAL | Bootable shell only |
 | Franchise profiles / recipes / BOMs | MISSING | StoreType enum + configJson hook only |
 | Purchasing / rebates / lots / expiry | MISSING | — |
