@@ -52,11 +52,26 @@ const storeRoutes: FastifyPluginAsync = async (app) => {
         });
       }
 
-      // Org manage from any active owner/manager membership
+      // Always require an active user + org:manage from DB memberships.
+      // Empty memberships must not fall through to create (no privilege escalation).
+      const user = await app.prisma.user.findFirst({
+        where: {
+          id: request.actor.userId,
+          organizationId: request.actor.organizationId,
+          active: true,
+        },
+      });
+      if (!user) {
+        return reply
+          .code(401)
+          .send({ error: "Unauthorized", code: "unauthorized" });
+      }
+
       const memberships = await app.prisma.storeMembership.findMany({
         where: {
           userId: request.actor.userId,
           active: true,
+          user: { active: true },
           store: {
             organizationId: request.actor.organizationId,
             active: true,
@@ -66,25 +81,11 @@ const storeRoutes: FastifyPluginAsync = async (app) => {
       const canManage = memberships.some((m) =>
         hasCapability(capabilitiesForRole(m.role), "org:manage"),
       );
-      if (!canManage && memberships.length > 0) {
+      if (!canManage) {
         return reply.code(403).send({
           error: "Missing capability: org:manage",
           code: "capability_denied",
         });
-      }
-      if (!canManage && memberships.length === 0) {
-        const user = await app.prisma.user.findFirst({
-          where: {
-            id: request.actor.userId,
-            organizationId: request.actor.organizationId,
-            active: true,
-          },
-        });
-        if (!user) {
-          return reply
-            .code(401)
-            .send({ error: "Unauthorized", code: "unauthorized" });
-        }
       }
 
       const { code, name, storeType } = parsed.data;

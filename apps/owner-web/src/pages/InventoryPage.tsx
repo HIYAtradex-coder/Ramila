@@ -14,12 +14,24 @@ export function InventoryPage() {
 
   useEffect(() => {
     if (!token || !storeId) return;
+    let cancelled = false;
     setLoading(true);
     setError(null);
     api<{ items: InventoryItem[] }>(`/stores/${storeId}/inventory`, { token })
-      .then((res) => setItems(res.items))
-      .catch((e) => setError(e instanceof Error ? e.message : "Load failed"))
-      .finally(() => setLoading(false));
+      .then((res) => {
+        if (!cancelled) setItems(res.items);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Load failed");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [token, storeId]);
 
   if (!token) return <Navigate to="/login" replace />;

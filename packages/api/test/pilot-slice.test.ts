@@ -20,6 +20,7 @@ async function resetDb() {
   await prisma.storeMembership.deleteMany();
   await prisma.store.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.organizationPlan.deleteMany();
   await prisma.organization.deleteMany();
 }
 
@@ -266,5 +267,79 @@ describe("HIYA pilot slice", () => {
     });
     assert.equal(res.statusCode, 200);
     assert.ok(Array.isArray(res.json().items));
+  });
+
+  it("denies POST /stores without org:manage even when memberships are empty", async () => {
+    const passwordHash = await bcrypt.hash("test-password-ok", 10);
+    const approvalPinHash = await bcrypt.hash("654321", 10);
+    const orphan = await prisma.user.create({
+      data: {
+        organizationId: orgId,
+        email: "orphan@test.local",
+        displayName: "Orphan",
+        passwordHash,
+        approvalPinHash,
+      },
+    });
+    const login = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: { email: "orphan@test.local", password: "test-password-ok" },
+    });
+    assert.equal(login.statusCode, 200);
+    const token = login.json().accessToken;
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/stores",
+      headers: { authorization: `Bearer ${token}` },
+      payload: {
+        code: "ORPHAN-1",
+        name: "Should Fail",
+        storeType: "cstore",
+        acceptMockBilling: true,
+      },
+    });
+    assert.equal(res.statusCode, 403);
+    assert.equal(res.json().code, "capability_denied");
+
+    await prisma.user.delete({ where: { id: orphan.id } });
+  });
+
+  it("requires organizationId when email exists in multiple orgs", async () => {
+    const passwordHash = await bcrypt.hash("test-password-ok", 10);
+    const approvalPinHash = await bcrypt.hash("654321", 10);
+    const otherOrg = await prisma.organization.create({
+      data: { name: "Other Org" },
+    });
+    await prisma.user.create({
+      data: {
+        organizationId: otherOrg.id,
+        email: "owner@test.local",
+        displayName: "Other Owner",
+        passwordHash,
+        approvalPinHash,
+      },
+    });
+
+    const ambiguous = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: { email: "owner@test.local", password: "test-password-ok" },
+    });
+    assert.equal(ambiguous.statusCode, 400);
+    assert.equal(ambiguous.json().code, "organization_required");
+
+    const scoped = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: {
+        email: "owner@test.local",
+        password: "test-password-ok",
+        organizationId: orgId,
+      },
+    });
+    assert.equal(scoped.statusCode, 200);
+    assert.equal(scoped.json().user.organizationId, orgId);
   });
 });

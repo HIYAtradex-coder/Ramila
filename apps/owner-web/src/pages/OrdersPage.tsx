@@ -63,11 +63,21 @@ export function OrdersPage() {
 
   useEffect(() => {
     if (!token || !storeId) return;
+    let cancelled = false;
     api<{ invoices: Invoice[] }>(`/stores/${storeId}/invoices`, { token })
-      .then((res) => setInvoices(res.invoices))
-      .catch((e) =>
-        setError(e instanceof Error ? e.message : "Invoice link unavailable"),
-      );
+      .then((res) => {
+        if (!cancelled) setInvoices(res.invoices);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(
+            e instanceof Error ? e.message : "Invoice link unavailable",
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [token, storeId]);
 
   if (!token) return <Navigate to="/login" replace />;

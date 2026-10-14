@@ -17,6 +17,7 @@ function contentHash(input: CreateInvoiceProposalRequest): string {
     vendorName: input.vendorName,
     invoiceNumber: input.invoiceNumber,
     invoiceDate: input.invoiceDate,
+    currency: input.currency ?? "USD",
     lines: input.lines.map((l) => ({
       skuCode: l.skuCode,
       quantityEaches: l.quantityEaches,
@@ -39,9 +40,12 @@ export async function createInvoiceProposal(
     (sum, l) => sum + lineTotal(l.quantityEaches, l.unitCostMinor),
     0,
   );
-  const needsReview = input.lines.some(
-    (l) => l.confidence !== undefined && l.confidence < LOW_CONFIDENCE,
-  );
+  // Missing OCR confidence must not skip review for non-manual sources.
+  const isManual = (input.sourceNote ?? "manual_entry") === "manual_entry";
+  const needsReview = input.lines.some((l) => {
+    if (l.confidence === undefined) return !isManual;
+    return l.confidence < LOW_CONFIDENCE;
+  });
   const status = needsReview ? "needs_review" : "proposed";
 
   const duplicate = await db.invoiceDocument.findFirst({
@@ -141,20 +145,28 @@ export async function approveAndPostInvoice(
     throw new AuthzError("Invalid approval PIN", 401, "step_up_failed");
   }
 
-  const existingByKey = await db.invoiceDocument.findFirst({
-    where: {
-      organizationId: actor.organizationId,
-      idempotencyKey,
-    },
-  });
-  if (existingByKey && existingByKey.id !== invoiceId) {
-    throw new AuthzError("Idempotency key already used", 409, "idempotency_conflict");
-  }
-  if (existingByKey?.status === "posted") {
-    return existingByKey;
-  }
-
   return db.$transaction(async (tx) => {
+    // Row lock so concurrent approves serialize on this invoice.
+    await tx.$executeRaw`
+      SELECT id FROM "InvoiceDocument"
+      WHERE id = ${invoiceId}::uuid
+        AND "organizationId" = ${actor.organizationId}::uuid
+      FOR UPDATE
+    `;
+
+    const existingByKey = await tx.invoiceDocument.findFirst({
+      where: {
+        organizationId: actor.organizationId,
+        idempotencyKey,
+      },
+    });
+    if (existingByKey && existingByKey.id !== invoiceId) {
+      throw new AuthzError("Idempotency key already used", 409, "idempotency_conflict");
+    }
+    if (existingByKey?.status === "posted" && existingByKey.id === invoiceId) {
+      return existingByKey;
+    }
+
     const invoice = await tx.invoiceDocument.findFirst({
       where: {
         id: invoiceId,
@@ -176,7 +188,28 @@ export async function approveAndPostInvoice(
       throw new AuthzError("Invoice not approvable", 409, "invalid_status");
     }
 
-    const now = new Date();
+    // Claim the post with a compare-and-swap before mutating stock.
+    const claimed = await tx.invoiceDocument.updateMany({
+      where: {
+        id: invoice.id,
+        status: { in: ["proposed", "needs_review", "approved"] },
+      },
+      data: {
+        status: "posted",
+        approvedAt: new Date(),
+        approvedById: actor.userId,
+        postedAt: new Date(),
+        idempotencyKey,
+      },
+    });
+    if (claimed.count !== 1) {
+      const again = await tx.invoiceDocument.findFirst({
+        where: { id: invoice.id },
+        include: { lines: true },
+      });
+      if (again?.status === "posted") return again;
+      throw new AuthzError("Invoice not approvable", 409, "invalid_status");
+    }
 
     for (const line of invoice.lines) {
       const item = await tx.inventoryItem.upsert({
@@ -211,15 +244,8 @@ export async function approveAndPostInvoice(
       });
     }
 
-    const posted = await tx.invoiceDocument.update({
+    const posted = await tx.invoiceDocument.findFirstOrThrow({
       where: { id: invoice.id },
-      data: {
-        status: "posted",
-        approvedAt: now,
-        approvedById: actor.userId,
-        postedAt: now,
-        idempotencyKey,
-      },
       include: { lines: true },
     });
 
