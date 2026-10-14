@@ -36,10 +36,12 @@ Audited against repository code after pilot scaffold (not aspirational).
 | AI proposal assist per tile | MOCK | Checklists/summaries only; never posts inventory/money/payroll |
 | POS module UI | MISSING | Stub route `/pos`; no vendor connected |
 | Daily reports module | PARTIAL | `/reports` — live inventory/invoice counts; sales KPIs UNKNOWN |
+| Profitability / P&amp;L reports | PARTIAL | `/profitability` + `GET /v1/reports/profitability`; SalesDaily GP + posted opex; DEMO sales labeled uncertified; no bank feed |
+| Expense draft → post → void | PARTIAL | `POST /v1/expenses` (+ post/void); owner/mgr/bookkeeper draft; owner/bookkeeper post; owner void; draft excluded from net |
 | Lottery module UI | MOCK | `/lottery` workpaper shell; not a filing |
 | Sales tax monthly module | MOCK | `/sales-tax` workpaper shell; not a filing |
 | Employee management module | PARTIAL | `/employees` — memberships live; payroll/schedule/onboarding MOCK |
-| Expense management module | MOCK | `/expenses` shell; no bank/card feed |
+| Expense management module | PARTIAL | `/expenses` draft/post UI; no bank/card feed |
 | Inventory module UI | WORKING | `/inventory` wired to store inventory API |
 | Invoice module UI | WORKING | `/invoices` propose → PIN approve-before-post |
 | Expo staff app | PARTIAL | Bootable shell only |
@@ -50,7 +52,7 @@ Audited against repository code after pilot scaffold (not aspirational).
 | Retail POS baskets / age checks | MISSING | — |
 | Franchise/POS connector registry | MISSING | Writes must default off when added |
 | Loyalty / marketplace ordering | MISSING | — |
-| Owner daily command center reports | PARTIAL | Tile summary only; full KPI command center still MISSING sales feeds |
+| Owner daily command center reports | PARTIAL | Tile summary + profitability period reports from SalesDaily/expenses; POS-certified feeds still MISSING |
 | Cameras / Live Wall / UniFi | BLOCKED | `/cameras` placeholder; needs owner-confirmed VMS + credentials |
 | Payroll connector (ADP/Gusto/etc.) | MISSING | UI stub only; no connected claim |
 | Possible-loss AI correlation | MISSING | — |

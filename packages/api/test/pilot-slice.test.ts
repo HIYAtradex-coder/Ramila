@@ -11,6 +11,8 @@ const databaseUrl =
 const prisma = createPrismaClient(databaseUrl);
 
 async function resetDb() {
+  await prisma.operatingExpense.deleteMany();
+  await prisma.salesDaily.deleteMany();
   await prisma.inventoryMovement.deleteMany();
   await prisma.invoiceLine.deleteMany();
   await prisma.invoiceDocument.deleteMany();
@@ -18,6 +20,7 @@ async function resetDb() {
   await prisma.auditEvent.deleteMany();
   await prisma.session.deleteMany();
   await prisma.storeMembership.deleteMany();
+  await prisma.organizationPlan.deleteMany();
   await prisma.store.deleteMany();
   await prisma.user.deleteMany();
   await prisma.organization.deleteMany();

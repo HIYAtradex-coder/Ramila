@@ -9,6 +9,7 @@ import { SalesTaxPage } from "./pages/SalesTaxPage";
 import { EmployeesPage } from "./pages/EmployeesPage";
 import { CamerasPage } from "./pages/CamerasPage";
 import { ExpensesPage } from "./pages/ExpensesPage";
+import { ProfitabilityPage } from "./pages/ProfitabilityPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { InvoicesPage } from "./pages/InvoicesPage";
 import { MultiStorePage } from "./pages/MultiStorePage";
@@ -25,6 +26,7 @@ export function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/pos" element={<PosPage />} />
           <Route path="/reports" element={<DailyReportsPage />} />
+          <Route path="/profitability" element={<ProfitabilityPage />} />
           <Route path="/lottery" element={<LotteryPage />} />
           <Route path="/sales-tax" element={<SalesTaxPage />} />
           <Route path="/employees" element={<EmployeesPage />} />

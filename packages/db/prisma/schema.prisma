@@ -18,6 +18,7 @@ model Organization {
   stores        Store[]
   auditEvents   AuditEvent[]
   invoices      InvoiceDocument[]
+  expenses      OperatingExpense[]
   /// Subscription seat plan — base 1 store included; extras billed MOCK until Stripe
   plan          OrganizationPlan?
 }
@@ -78,6 +79,8 @@ model Store {
   items        InventoryItem[]
   movements    InventoryMovement[]
   invoices     InvoiceDocument[]
+  salesDaily   SalesDaily[]
+  expenses     OperatingExpense[]
 
   @@unique([organizationId, code])
 }
@@ -213,4 +216,65 @@ model InvoiceLine {
   invoice InvoiceDocument @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@unique([invoiceId, lineNumber])
+}
+
+/// Certified daily sales facts. grossProfitMinor already includes COGS — never subtract purchases again for GP.
+model SalesDaily {
+  id                String   @id @default(uuid()) @db.Uuid
+  storeId           String   @db.Uuid
+  businessDate      DateTime @db.Date
+  insideSalesMinor  Int
+  fuelSalesMinor    Int      @default(0)
+  /// Certified gross profit (sales − COGS). Source must be labeled honestly.
+  grossProfitMinor  Int
+  cashVarianceMinor Int      @default(0)
+  /// e.g. DEMO_SEED | MANUAL | POS_ADAPTER — never claim certified without a real feed
+  source            String
+  /// True only when a trusted POS/close feed certified the row
+  certified         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id])
+
+  @@unique([storeId, businessDate, source])
+  @@index([storeId, businessDate])
+}
+
+/// Operating expense. DRAFT never affects net profit; only POSTED amounts roll into profitability.
+model OperatingExpense {
+  id              String    @id @default(uuid()) @db.Uuid
+  organizationId  String    @db.Uuid
+  storeId         String    @db.Uuid
+  /// ExpenseCategory value from contracts
+  category        String
+  /// Always positive; stored as USD cents
+  amountMinor     Int
+  incurredDate    DateTime  @db.Date
+  description     String
+  /// MANUAL | SCAN_PROPOSAL | IMPORT — AI proposals stay draft until human post
+  sourceType      String
+  idempotencyKey  String
+  createdById     String    @db.Uuid
+  /// draft | posted | voided
+  status          String    @default("draft")
+  vendorName      String?
+  paymentMethod   String?
+  receiptUrl      String?
+  sourceReference String?
+  recurring       Boolean   @default(false)
+  postedAt        DateTime?
+  postedById      String?   @db.Uuid
+  voidedAt        DateTime?
+  voidedById      String?   @db.Uuid
+  voidReason      String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  store        Store        @relation(fields: [storeId], references: [id])
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([storeId, status, incurredDate])
+  @@index([organizationId, incurredDate])
 }

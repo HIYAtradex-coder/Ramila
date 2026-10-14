@@ -135,6 +135,93 @@ async function main() {
     },
   });
 
+  // DEMO SalesDaily — labeled uncertified; never claim POS-certified without a real feed
+  const today = new Date();
+  const day = (offset: number) => {
+    const d = new Date(
+      Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - offset),
+    );
+    return d;
+  };
+
+  for (const [store, inside, fuel, gp, offset] of [
+    [storeA.id, 420_000, 880_000, 210_000, 1],
+    [storeA.id, 390_000, 810_000, 195_000, 2],
+    [storeB.id, 260_000, 0, 78_000, 1],
+  ] as const) {
+    await prisma.salesDaily.upsert({
+      where: {
+        storeId_businessDate_source: {
+          storeId: store,
+          businessDate: day(offset),
+          source: "DEMO_SEED",
+        },
+      },
+      update: {
+        insideSalesMinor: inside,
+        fuelSalesMinor: fuel,
+        grossProfitMinor: gp,
+        certified: false,
+      },
+      create: {
+        storeId: store,
+        businessDate: day(offset),
+        insideSalesMinor: inside,
+        fuelSalesMinor: fuel,
+        grossProfitMinor: gp,
+        source: "DEMO_SEED",
+        certified: false,
+      },
+    });
+  }
+
+  await prisma.operatingExpense.upsert({
+    where: {
+      organizationId_idempotencyKey: {
+        organizationId: org.id,
+        idempotencyKey: "seed-expense-rent-demo01",
+      },
+    },
+    update: {},
+    create: {
+      organizationId: org.id,
+      storeId: storeA.id,
+      category: "rent_lease",
+      amountMinor: 350_000,
+      incurredDate: day(3),
+      description: "SYNTHETIC demo rent (posted)",
+      sourceType: "MANUAL",
+      idempotencyKey: "seed-expense-rent-demo01",
+      createdById: owner.id,
+      status: "posted",
+      postedAt: new Date(),
+      postedById: owner.id,
+      vendorName: "Demo Landlord LLC",
+    },
+  });
+
+  await prisma.operatingExpense.upsert({
+    where: {
+      organizationId_idempotencyKey: {
+        organizationId: org.id,
+        idempotencyKey: "seed-expense-draft-supplies",
+      },
+    },
+    update: {},
+    create: {
+      organizationId: org.id,
+      storeId: storeA.id,
+      category: "store_supplies",
+      amountMinor: 4_500,
+      incurredDate: day(0),
+      description: "SYNTHETIC draft bags — waiting for post",
+      sourceType: "MANUAL",
+      idempotencyKey: "seed-expense-draft-supplies",
+      createdById: owner.id,
+      status: "draft",
+    },
+  });
+
   await prisma.auditEvent.create({
     data: {
       organizationId: org.id,
@@ -146,6 +233,7 @@ async function main() {
         label: "SYNTHETIC",
         stores: [storeA.code, storeB.code],
         plan: "1 included + 1 extra MOCK billed ($100/mo)",
+        profitability: "DEMO_SEED SalesDaily + sample expenses (uncertified)",
       },
     },
   });
@@ -155,6 +243,7 @@ async function main() {
   console.log("  receiver@demo.hiya.local /", password);
   console.log("  approval PIN: 123456");
   console.log("  plan: 1 store included; DEMO-02 is +$100/mo MOCK billing");
+  console.log("  profitability: DEMO_SEED sales + sample expenses (not POS-certified)");
 }
 
 main()
