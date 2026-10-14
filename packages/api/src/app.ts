@@ -6,6 +6,7 @@ import authPlugin from "./plugins/auth.js";
 import healthRoutes from "./routes/health.js";
 import authRoutes from "./routes/auth.js";
 import storeRoutes from "./routes/stores.js";
+import billingRoutes from "./routes/billing.js";
 import inventoryRoutes from "./routes/inventory.js";
 import invoiceRoutes from "./routes/invoices.js";
 import auditRoutes from "./routes/audit.js";
@@ -32,6 +33,7 @@ export async function buildApp(opts: BuildAppOptions = {}) {
   await app.register(healthRoutes);
   await app.register(authRoutes);
   await app.register(storeRoutes);
+  await app.register(billingRoutes);
   await app.register(inventoryRoutes);
   await app.register(invoiceRoutes);
   await app.register(auditRoutes);

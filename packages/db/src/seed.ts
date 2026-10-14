@@ -119,6 +119,22 @@ async function main() {
     });
   }
 
+  await prisma.organizationPlan.upsert({
+    where: { organizationId: org.id },
+    update: {
+      includedStoreSeats: 1,
+      additionalStorePriceMinor: 10_000,
+      billingMode: "MOCK",
+    },
+    create: {
+      organizationId: org.id,
+      includedStoreSeats: 1,
+      additionalStorePriceMinor: 10_000,
+      currency: "USD",
+      billingMode: "MOCK",
+    },
+  });
+
   await prisma.auditEvent.create({
     data: {
       organizationId: org.id,
@@ -126,7 +142,11 @@ async function main() {
       action: "seed.completed",
       entityType: "Organization",
       entityId: org.id,
-      payloadJson: { label: "SYNTHETIC", stores: [storeA.code, storeB.code] },
+      payloadJson: {
+        label: "SYNTHETIC",
+        stores: [storeA.code, storeB.code],
+        plan: "1 included + 1 extra MOCK billed ($100/mo)",
+      },
     },
   });
 
@@ -134,6 +154,7 @@ async function main() {
   console.log("  owner@demo.hiya.local /", password);
   console.log("  receiver@demo.hiya.local /", password);
   console.log("  approval PIN: 123456");
+  console.log("  plan: 1 store included; DEMO-02 is +$100/mo MOCK billing");
 }
 
 main()

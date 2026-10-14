@@ -185,19 +185,19 @@ const PROPOSALS: Record<AiDepartment, Omit<AiProposal, "id" | "demo">> = {
       department: "multi-store",
       title: "Cross-store attention list",
       summary:
-        "Propose a portfolio walkthrough across locations you can access. Does not claim stores are synced to a vendor.",
+        "Propose a portfolio walkthrough. Base seat = 1 store included; extras are +$100/mo MOCK billing — not a Stripe charge or vendor sync claim.",
       checklist: [
-        "Confirm each membership store appears in All locations",
-        "Switch to each site and spot-check inventory / invoice queues",
-        "Note stores missing coverage on overnight (schedule UNKNOWN)",
+        "Confirm Store 1 shows as Included on Home store management",
+        "Review MOCK monthly total before adding another seat",
+        "Open each store’s full system and spot-check inventory / invoice queues",
         "Hold portfolio sales compare until POS feeds exist",
       ],
       possibleIssues: [
         "Possible uneven invoice backlog across stores — review each site queue",
-        "Possible over-scoped access if a staff role spans stores unintentionally — verify memberships",
+        "Possible unexpected MOCK seat charge if an extra store was added by mistake — verify plan ledger",
       ],
       honesty:
-        "DEMO proposals · memberships are live · cross-store KPIs UNKNOWN · not vendor-synced",
+        "DEMO proposals · plan MOCK · cross-store KPIs UNKNOWN · not vendor-synced · no Stripe",
       requiresHumanApprove: true,
     },
 };

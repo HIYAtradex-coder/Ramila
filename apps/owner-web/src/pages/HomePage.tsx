@@ -1,4 +1,4 @@
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
   Camera,
@@ -13,6 +13,10 @@ import {
   Wallet,
 } from "lucide-react";
 import { useAuth } from "../auth";
+import {
+  EXTRA_STORE_PRICE_MINOR,
+  formatUsdMinor,
+} from "../lib/store-plan";
 
 type Tone = "gold" | "green" | "blue" | "purple" | "teal" | "slate";
 
@@ -24,7 +28,7 @@ type TileDef = {
   status: string;
 };
 
-/** Mirror daily-station-2 HomeScreen sections; tiles wired to HIYA modules. */
+/** Full system modules — same set for every store (store-scoped). */
 const DAILY: TileDef[] = [
   { to: "/pos", label: "POS", tone: "gold", icon: Store, status: "MISSING" },
   {
@@ -115,9 +119,11 @@ function Tile({ tile }: { tile: TileDef }) {
 
 export function HomePage() {
   const { token, memberships, storeId, setStoreId, logout } = useAuth();
+  const navigate = useNavigate();
   if (!token) return <Navigate to="/login" replace />;
 
   const store = memberships.find((m) => m.storeId === storeId);
+  const extras = Math.max(0, memberships.length - 1);
 
   return (
     <div className="home-shell">
@@ -142,20 +148,60 @@ export function HomePage() {
           {store ? `${store.storeCode} · ${store.storeName}` : "Select a store"}
         </p>
 
-        <label className="store-select-block">
-          <span className="section-label">Store · active location</span>
-          <select
-            value={storeId}
-            onChange={(e) => setStoreId(e.target.value)}
-            aria-label="Active store"
-          >
-            {memberships.map((m) => (
-              <option key={m.storeId} value={m.storeId}>
-                {m.storeCode} — {m.storeName} ({m.role})
-              </option>
+        <section className="tile-section">
+          <p className="section-label">Store management</p>
+          <p className="home-plan-line">
+            Base = 1 store included · Extra ={" "}
+            {formatUsdMinor(EXTRA_STORE_PRICE_MINOR)}/mo MOCK
+            {extras > 0
+              ? ` · ${extras} extra · ${formatUsdMinor(extras * EXTRA_STORE_PRICE_MINOR)}/mo`
+              : ""}
+          </p>
+          <div className="store-tile-grid">
+            {memberships.map((m, idx) => (
+              <button
+                key={m.storeId}
+                type="button"
+                className={
+                  m.storeId === storeId
+                    ? "store-app-tile store-app-tile--on"
+                    : "store-app-tile"
+                }
+                onClick={() => setStoreId(m.storeId)}
+              >
+                <span className="store-app-tile-icon" aria-hidden>
+                  {idx + 1}
+                </span>
+                <span className="store-app-tile-label">{m.storeCode}</span>
+                <span className="store-app-tile-meta">
+                  {idx === 0
+                    ? "Included"
+                    : `+${formatUsdMinor(EXTRA_STORE_PRICE_MINOR)}/mo`}
+                </span>
+              </button>
             ))}
-          </select>
-        </label>
+            <button
+              type="button"
+              className="store-app-tile store-app-tile--add"
+              onClick={() => navigate("/stores#add-store")}
+            >
+              <span className="store-app-tile-icon" aria-hidden>
+                +
+              </span>
+              <span className="store-app-tile-label">Add store</span>
+              <span className="store-app-tile-meta">
+                +{formatUsdMinor(EXTRA_STORE_PRICE_MINOR)}/mo MOCK
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <p className="section-label" style={{ marginBottom: 0 }}>
+          Full system · {store?.storeCode ?? "store"}
+        </p>
+        <p className="muted" style={{ margin: 0 }}>
+          Same modules for every store — data stays store-scoped.
+        </p>
 
         <section className="tile-section">
           <p className="section-label">Daily</p>
@@ -185,8 +231,9 @@ export function HomePage() {
         </section>
 
         <p className="home-honesty">
-          Tile status badges are honesty labels. No POS, lottery filing, tax
-          filing, VMS, or bank feed is claimed connected.
+          Tile status badges are honesty labels. Billing for extra stores is
+          MOCK — no POS, lottery filing, tax filing, VMS, bank feed, or Stripe
+          charge is claimed live.
         </p>
       </div>
 
@@ -208,9 +255,9 @@ export function HomePage() {
             <ClipboardList size={20} strokeWidth={2} />
             <span>Daily</span>
           </Link>
-          <Link to="/inventory" className="dock-item">
-            <Package size={20} strokeWidth={2} />
-            <span>Stock</span>
+          <Link to="/stores" className="dock-item">
+            <LayoutGrid size={20} strokeWidth={2} />
+            <span>Stores</span>
           </Link>
         </div>
       </nav>

@@ -18,6 +18,25 @@ model Organization {
   stores        Store[]
   auditEvents   AuditEvent[]
   invoices      InvoiceDocument[]
+  /// Subscription seat plan — base 1 store included; extras billed MOCK until Stripe
+  plan          OrganizationPlan?
+}
+
+/// Org-level store seat plan. Billing is MOCK until a real processor is wired.
+model OrganizationPlan {
+  id                        String   @id @default(uuid()) @db.Uuid
+  organizationId            String   @unique @db.Uuid
+  /// Stores included in base subscription (product rule: 1)
+  includedStoreSeats        Int      @default(1)
+  /// Price per additional store seat, minor units (USD cents). Default $100.00
+  additionalStorePriceMinor Int      @default(10000)
+  currency                  String   @default("USD")
+  /// MOCK until Stripe (or other) test-mode is intentionally wired
+  billingMode               String   @default("MOCK")
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
 }
 
 model User {

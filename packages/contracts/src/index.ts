@@ -197,3 +197,33 @@ export const HealthResponse = z.object({
   version: z.string(),
 });
 export type HealthResponse = z.infer<typeof HealthResponse>;
+
+/** Base seat = 1 store; each additional store = +$100/mo (MOCK billing until Stripe). */
+export const EXTRA_STORE_PRICE_MINOR = 10_000;
+export const INCLUDED_STORE_SEATS = 1;
+
+export const OrgPlanView = z.object({
+  organizationId: z.string().uuid(),
+  includedStoreSeats: z.number().int().positive(),
+  additionalStorePriceMinor: MoneyMinor.nonnegative(),
+  currency: z.string().length(3),
+  billingMode: z.literal("MOCK"),
+  activeStoreCount: z.number().int().nonnegative(),
+  billableExtraStores: z.number().int().nonnegative(),
+  monthlyTotalMinor: MoneyMinor.nonnegative(),
+  honesty: z.string(),
+});
+export type OrgPlanView = z.infer<typeof OrgPlanView>;
+
+export const AddStoreRequest = z.object({
+  code: z
+    .string()
+    .min(2)
+    .max(16)
+    .regex(/^[A-Z0-9-]+$/i, "Use letters, numbers, or hyphen"),
+  name: z.string().min(2).max(120),
+  storeType: StoreType.default("cstore"),
+  /** Explicit ack that add-store charges +$100/mo MOCK — not a real card charge */
+  acceptMockBilling: z.literal(true),
+});
+export type AddStoreRequest = z.infer<typeof AddStoreRequest>;
