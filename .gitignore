@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+.turbo
+.next
+.expo
+.expo-shared
+*.log
+.env
+.env.local
+coverage
+*.tsbuildinfo
+.DS_Store
+apps/*/android
+apps/*/ios
+.prisma
