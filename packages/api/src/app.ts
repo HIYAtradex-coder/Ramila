@@ -21,13 +21,21 @@ export type BuildAppOptions = {
 export async function buildApp(opts: BuildAppOptions = {}) {
   const app = Fastify({ logger: opts.logger ?? true });
 
+  const jwtSecret =
+    opts.jwtSecret ??
+    process.env.JWT_SECRET ??
+    (process.env.NODE_ENV === "production" ? undefined : "dev-only-jwt-secret");
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET is required when NODE_ENV=production");
+  }
+
   await app.register(cors, { origin: true });
   await app.register(prismaPlugin, {
     prisma: opts.prisma,
     databaseUrl: opts.databaseUrl,
   });
   await app.register(authPlugin, {
-    jwtSecret: opts.jwtSecret ?? process.env.JWT_SECRET ?? "dev-only-jwt-secret",
+    jwtSecret,
   });
 
   await app.register(healthRoutes);

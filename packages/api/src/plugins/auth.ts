@@ -47,7 +47,7 @@ const authPlugin: FastifyPluginAsync<AuthPluginOpts> = async (app, opts) => {
         displayName: payload.name,
       };
     } catch {
-      reply.code(401).send({ error: "Unauthorized", code: "unauthorized" });
+      return reply.code(401).send({ error: "Unauthorized", code: "unauthorized" });
     }
   });
 };

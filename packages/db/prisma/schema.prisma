@@ -160,9 +160,12 @@ model InventoryMovement {
   actorUserId   String?  @db.Uuid
   createdAt     DateTime @default(now())
 
-  store Store         @relation(fields: [storeId], references: [id])
-  item  InventoryItem @relation(fields: [itemId], references: [id])
+  store      Store              @relation(fields: [storeId], references: [id])
+  item       InventoryItem      @relation(fields: [itemId], references: [id])
+  reversalOf InventoryMovement? @relation("MovementReversal", fields: [reversalOfId], references: [id])
+  reversals  InventoryMovement[] @relation("MovementReversal")
 
+  @@unique([sourceType, sourceId, itemId])
   @@index([storeId, createdAt])
   @@index([sourceType, sourceId])
 }

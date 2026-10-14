@@ -24,9 +24,19 @@ export function InvoicesPage() {
 
   useEffect(() => {
     if (!token || !storeId) return;
-    refresh(token, storeId).catch((e) =>
-      setError(e instanceof Error ? e.message : "Load failed"),
-    );
+    let cancelled = false;
+    api<{ invoices: Invoice[] }>(`/stores/${storeId}/invoices`, { token })
+      .then((docs) => {
+        if (!cancelled) setInvoices(docs.invoices);
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Load failed");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [token, storeId]);
 
   if (!token) return <Navigate to="/login" replace />;

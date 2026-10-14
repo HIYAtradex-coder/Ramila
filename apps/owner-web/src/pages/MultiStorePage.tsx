@@ -8,7 +8,6 @@ import { api, type Membership } from "../api";
 import {
   computePlan,
   formatUsdMinor,
-  writeMockPlanNote,
   type OrgPlan,
 } from "../lib/store-plan";
 
@@ -30,23 +29,50 @@ export function MultiStorePage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fallbackOrg = organizationId ?? "00000000-0000-4000-8000-000000000001";
-
   const localPlan = useMemo(
-    () => computePlan(fallbackOrg, memberships.length, "session-mock"),
-    [fallbackOrg, memberships.length],
+    () =>
+      organizationId
+        ? computePlan(organizationId, memberships.length, "session-mock")
+        : null,
+    [organizationId, memberships.length],
   );
 
   useEffect(() => {
     if (!token) return;
     api<OrgPlan>("/billing/plan", { token })
       .then((p) => setPlan({ ...p, billingMode: "MOCK", source: "api" }))
-      .catch(() => setPlan(localPlan));
+      .catch(() => {
+        if (localPlan) setPlan(localPlan);
+      });
   }, [token, localPlan]);
 
   if (!token) return <Navigate to="/login" replace />;
+  if (!organizationId) {
+    return (
+      <ModuleShell
+        title="Multi-store"
+        eyebrow="Store management"
+        status="PARTIAL"
+        note="Session is missing organization id — sign out and sign in again."
+      >
+        <p className="err">No organizationId in session. Re-login required.</p>
+      </ModuleShell>
+    );
+  }
 
   const view = plan ?? localPlan;
+  if (!view) {
+    return (
+      <ModuleShell
+        title="Multi-store"
+        eyebrow="Store management"
+        status="PARTIAL"
+        note="Loading plan…"
+      >
+        <p className="muted">Loading subscription plan…</p>
+      </ModuleShell>
+    );
+  }
   const includedId = memberships[0]?.storeId;
 
   function openStoreSystem(id: string) {
@@ -87,39 +113,12 @@ export function MultiStorePage() {
       setMessage(
         `Added ${res.store.code}. MOCK ledger now ${formatUsdMinor(res.plan.monthlyTotalMinor)}/mo — no real card charge.`,
       );
-    } catch {
-      // Session MOCK fallback when API/DB unavailable
-      const newId =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `mock-${Date.now()}`;
-      const m: Membership = {
-        storeId: newId,
-        storeCode: code.trim().toUpperCase() || `SITE-${memberships.length + 1}`,
-        storeName: name.trim() || `New store ${memberships.length + 1}`,
-        role: "OWNER",
-      };
-      if (memberships.some((x) => x.storeCode === m.storeCode)) {
-        setError("Store code already in this session portfolio.");
-        setBusy(false);
-        return;
-      }
-      addMembership(m);
-      const next = computePlan(
-        fallbackOrg,
-        memberships.length + 1,
-        "session-mock",
-      );
-      setPlan(next);
-      writeMockPlanNote(
-        `session-mock extras=${next.billableExtraStores} total=${next.monthlyTotalMinor}`,
-      );
-      setStoreId(m.storeId);
-      setCode("");
-      setName("");
-      setAccept(false);
-      setMessage(
-        `Added ${m.storeCode} in session MOCK ledger (${formatUsdMinor(next.monthlyTotalMinor)}/mo). API unavailable — not a real Stripe charge; persist when DB is up.`,
+    } catch (e) {
+      // Fail closed: never invent OWNER memberships or fake store UUIDs.
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Could not add store. Fix the error and retry — no session-mock seat was created.",
       );
     } finally {
       setBusy(false);

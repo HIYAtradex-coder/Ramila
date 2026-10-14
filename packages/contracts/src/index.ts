@@ -106,6 +106,8 @@ export type MoneyMinor = z.infer<typeof MoneyMinor>;
 export const LoginRequest = z.object({
   email: z.string().email(),
   password: z.string().min(8),
+  /** Required when the same email exists in more than one organization. */
+  organizationId: z.string().uuid().optional(),
 });
 export type LoginRequest = z.infer<typeof LoginRequest>;
 

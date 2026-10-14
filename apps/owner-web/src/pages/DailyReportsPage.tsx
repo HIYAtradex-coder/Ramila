@@ -15,6 +15,7 @@ export function DailyReportsPage() {
 
   useEffect(() => {
     if (!token || !storeId) return;
+    let cancelled = false;
     setLoading(true);
     setError(null);
     Promise.all([
@@ -24,11 +25,21 @@ export function DailyReportsPage() {
       api<{ invoices: Invoice[] }>(`/stores/${storeId}/invoices`, { token }),
     ])
       .then(([inv, docs]) => {
+        if (cancelled) return;
         setItems(inv.items);
         setInvoices(docs.invoices);
       })
-      .catch((e) => setError(e instanceof Error ? e.message : "Load failed"))
-      .finally(() => setLoading(false));
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Load failed");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [token, storeId]);
 
   if (!token) return <Navigate to="/login" replace />;

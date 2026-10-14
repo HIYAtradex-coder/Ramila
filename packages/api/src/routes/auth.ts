@@ -15,17 +15,30 @@ const authRoutes: FastifyPluginAsync = async (app) => {
       });
     }
 
-    const { email, password } = parsed.data;
-    const user = await app.prisma.user.findFirst({
-      where: { email: email.toLowerCase(), active: true },
+    const { email, password, organizationId } = parsed.data;
+    const matches = await app.prisma.user.findMany({
+      where: {
+        email: email.toLowerCase(),
+        active: true,
+        ...(organizationId ? { organizationId } : {}),
+      },
       include: {
         memberships: {
           where: { active: true, store: { active: true } },
           include: { store: true },
         },
       },
+      take: 2,
     });
 
+    if (matches.length > 1) {
+      return reply.code(400).send({
+        error: "organizationId is required when email matches multiple organizations",
+        code: "organization_required",
+      });
+    }
+
+    const user = matches[0];
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return reply.code(401).send({ error: "Invalid credentials", code: "invalid_credentials" });
     }
