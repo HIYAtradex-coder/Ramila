@@ -4,6 +4,7 @@ import {
   Camera,
   ClipboardList,
   FileText,
+  LayoutGrid,
   Package,
   Receipt,
   Store,
@@ -81,6 +82,13 @@ const BOOKS: TileDef[] = [
     tone: "green",
     icon: FileText,
     status: "WORKING",
+  },
+  {
+    to: "/stores",
+    label: "Stores",
+    tone: "blue",
+    icon: LayoutGrid,
+    status: "PARTIAL",
   },
 ];
 

@@ -14,6 +14,7 @@ const DEPARTMENTS = [
   { id: "expenses", name: "Expenses", tile: "Expenses" },
   { id: "inventory", name: "Inventory", tile: "Inventory" },
   { id: "invoices", name: "Invoices", tile: "Invoices" },
+  { id: "multi-store", name: "Multi-store portfolio", tile: "Stores" },
 ] as const;
 
 const ONBOARDING_STEPS = [

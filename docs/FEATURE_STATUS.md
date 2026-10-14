@@ -25,7 +25,8 @@ Audited against repository code after pilot scaffold (not aspirational).
 | Idempotent approve | WORKING | `idempotencyKey` on invoice |
 | Duplicate invoice hash guard | WORKING | `contentHash` uniqueness check |
 | Owner web console | PARTIAL | iPhone-style home tiles + 9 modules; login + store scope |
-| Owner home tile grid | WORKING | `/` — POS, Reports, Lottery, Tax, Employees, Cameras, Expenses, Inventory, Invoices |
+| Owner home tile grid | WORKING | `/` — 10 tiles incl. Multi-store (`/stores`) |
+| Multi-store portfolio UI | PARTIAL | Membership list + switch; rollup KPIs UNKNOWN; no vendor sync claim |
 | Shared capture tools (copy/cut/paste/scan/camera) | WORKING | Device clipboard + local file/camera; not hardware scanner/VMS |
 | AI proposal assist per tile | MOCK | Checklists/summaries only; never posts inventory/money/payroll |
 | POS module UI | MISSING | Stub route `/pos`; no vendor connected |

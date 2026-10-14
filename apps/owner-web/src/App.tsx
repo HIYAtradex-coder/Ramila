@@ -11,6 +11,7 @@ import { CamerasPage } from "./pages/CamerasPage";
 import { ExpensesPage } from "./pages/ExpensesPage";
 import { InventoryPage } from "./pages/InventoryPage";
 import { InvoicesPage } from "./pages/InvoicesPage";
+import { MultiStorePage } from "./pages/MultiStorePage";
 
 export function App() {
   return (
@@ -28,6 +29,7 @@ export function App() {
           <Route path="/expenses" element={<ExpensesPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/invoices" element={<InvoicesPage />} />
+          <Route path="/stores" element={<MultiStorePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

@@ -12,7 +12,8 @@ export type AiDepartment =
   | "cameras"
   | "expenses"
   | "inventory"
-  | "invoices";
+  | "invoices"
+  | "multi-store";
 
 export type AiProposal = {
   id: string;
@@ -164,22 +165,41 @@ const PROPOSALS: Record<AiDepartment, Omit<AiProposal, "id" | "demo">> = {
     requiresHumanApprove: true,
   },
   invoices: {
-    department: "invoices",
-    title: "Invoice review assist",
-    summary:
-      "Help review proposals before PIN approve. AI never posts inventory.",
-    checklist: [
-      "Check vendor, invoice #, and line quantities",
-      "Confirm unit costs look plausible",
-      "Human enters approval PIN to post — AI cannot",
-    ],
-    possibleIssues: [
-      "Possible duplicate invoice if content hash collides — API guards; still verify",
-      "Possible wrong SKU match on OCR later — needs review confidence",
-    ],
-    honesty: "DEMO proposals · propose→approve path is live · AI never posts",
-    requiresHumanApprove: true,
-  },
+      department: "invoices",
+      title: "Invoice review assist",
+      summary:
+        "Help review proposals before PIN approve. AI never posts inventory.",
+      checklist: [
+        "Check vendor, invoice #, and line quantities",
+        "Confirm unit costs look plausible",
+        "Human enters approval PIN to post — AI cannot",
+      ],
+      possibleIssues: [
+        "Possible duplicate invoice if content hash collides — API guards; still verify",
+        "Possible wrong SKU match on OCR later — needs review confidence",
+      ],
+      honesty: "DEMO proposals · propose→approve path is live · AI never posts",
+      requiresHumanApprove: true,
+    },
+  "multi-store": {
+      department: "multi-store",
+      title: "Cross-store attention list",
+      summary:
+        "Propose a portfolio walkthrough across locations you can access. Does not claim stores are synced to a vendor.",
+      checklist: [
+        "Confirm each membership store appears in All locations",
+        "Switch to each site and spot-check inventory / invoice queues",
+        "Note stores missing coverage on overnight (schedule UNKNOWN)",
+        "Hold portfolio sales compare until POS feeds exist",
+      ],
+      possibleIssues: [
+        "Possible uneven invoice backlog across stores — review each site queue",
+        "Possible over-scoped access if a staff role spans stores unintentionally — verify memberships",
+      ],
+      honesty:
+        "DEMO proposals · memberships are live · cross-store KPIs UNKNOWN · not vendor-synced",
+      requiresHumanApprove: true,
+    },
 };
 
 export function proposeForDepartment(department: AiDepartment): AiProposal {
