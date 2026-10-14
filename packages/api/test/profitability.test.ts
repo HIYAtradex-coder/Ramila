@@ -415,6 +415,75 @@ describe("profitability + expenses", () => {
     assert.equal(res.statusCode, 403);
   });
 
+  it("auto analysis is proposal-only and does not mutate expenses", async () => {
+    const before = await prisma.operatingExpense.findMany({
+      where: { organizationId: orgId },
+      orderBy: { id: "asc" },
+    });
+    const beforeJson = JSON.stringify(
+      before.map((e) => ({
+        id: e.id,
+        status: e.status,
+        amountMinor: e.amountMinor,
+        updatedAt: e.updatedAt.toISOString(),
+      })),
+    );
+
+    const analysis = await app.inject({
+      method: "GET",
+      url: `/v1/reports/profitability/analysis?period=WEEKLY&locationId=${storeAId}&anchor=2026-10-14`,
+      headers: { authorization: `Bearer ${ownerToken}` },
+    });
+    assert.equal(analysis.statusCode, 200);
+    const body = analysis.json();
+    assert.equal(body.proposalOnly, true);
+    assert.equal(body.mutatesExpenses, false);
+    assert.equal(body.mutatesNetProfit, false);
+    assert.ok(Array.isArray(body.insights));
+    assert.ok(body.insights.length > 0);
+    assert.match(body.honesty, /never posts/i);
+
+    const after = await prisma.operatingExpense.findMany({
+      where: { organizationId: orgId },
+      orderBy: { id: "asc" },
+    });
+    const afterJson = JSON.stringify(
+      after.map((e) => ({
+        id: e.id,
+        status: e.status,
+        amountMinor: e.amountMinor,
+        updatedAt: e.updatedAt.toISOString(),
+      })),
+    );
+    assert.equal(afterJson, beforeJson);
+  });
+
+  it("auto analysis keeps incomplete feeds marked incomplete", async () => {
+    await prisma.salesDaily.deleteMany({ where: { storeId: storeBId } });
+    const analysis = await app.inject({
+      method: "GET",
+      url: `/v1/reports/profitability/analysis?period=MONTHLY&locationId=${storeBId}&anchor=2026-10-14`,
+      headers: { authorization: `Bearer ${ownerToken}` },
+    });
+    assert.equal(analysis.statusCode, 200);
+    const body = analysis.json();
+    assert.equal(body.incompleteMarked, true);
+    assert.equal(body.summaryEcho.salesDataComplete, false);
+    assert.equal(body.summaryEcho.totalSalesMinor, null);
+    assert.equal(body.summaryEcho.grossProfitMinor, null);
+    assert.equal(body.summaryEcho.netProfitBeforeTaxMinor, null);
+    assert.ok(
+      body.insights.some(
+        (i: { id: string; severity: string }) =>
+          i.id === "incomplete-sales" || i.severity === "incomplete",
+      ),
+    );
+    assert.ok(
+      body.dataQualityFlags.includes("INCOMPLETE_SALES_FEED") ||
+        body.incompleteMarked === true,
+    );
+  });
+
   it("expense create is idempotent on idempotencyKey", async () => {
     const key = `idem-exp-${Date.now()}`;
     const payload = {

@@ -252,7 +252,7 @@ model OperatingExpense {
   amountMinor     Int
   incurredDate    DateTime  @db.Date
   description     String
-  /// MANUAL | SCAN_PROPOSAL | IMPORT — AI proposals stay draft until human post
+  /// MANUAL | SCAN_PROPOSAL | IMPORT | BANK_STATEMENT — proposals stay draft until human post
   sourceType      String
   idempotencyKey  String
   createdById     String    @db.Uuid
@@ -262,6 +262,8 @@ model OperatingExpense {
   paymentMethod   String?
   receiptUrl      String?
   sourceReference String?
+  /// Opaque attachment id (bank statement / receipt doc). No FK — attachment model owned elsewhere.
+  attachmentId    String?   @db.Uuid
   recurring       Boolean   @default(false)
   postedAt        DateTime?
   postedById      String?   @db.Uuid

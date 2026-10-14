@@ -51,6 +51,22 @@ type ProfitabilityReport = {
   accountingNotice: string;
 };
 
+type ProfitabilityAnalysis = {
+  proposalOnly: true;
+  mutatesExpenses: false;
+  mutatesNetProfit: false;
+  honesty: string;
+  insights: Array<{
+    id: string;
+    severity: "info" | "attention" | "incomplete";
+    title: string;
+    detail: string;
+    tone: string;
+  }>;
+  dataQualityFlags: string[];
+  incompleteMarked: boolean;
+};
+
 const PERIODS: Period[] = ["WEEKLY", "BIWEEKLY", "MONTHLY", "YEARLY"];
 
 function money(minor: number | null | undefined): string {
@@ -76,6 +92,7 @@ export function ProfitabilityPage() {
   const [period, setPeriod] = useState<Period>("WEEKLY");
   const [scopeAll, setScopeAll] = useState(false);
   const [report, setReport] = useState<ProfitabilityReport | null>(null);
+  const [analysis, setAnalysis] = useState<ProfitabilityAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -87,13 +104,19 @@ export function ProfitabilityPage() {
     try {
       const qs = new URLSearchParams({ period });
       if (!scopeAll && storeId) qs.set("locationId", storeId);
-      const data = await api<ProfitabilityReport>(
-        `/v1/reports/profitability?${qs}`,
-        { token },
-      );
+      const q = qs.toString();
+      const [data, insight] = await Promise.all([
+        api<ProfitabilityReport>(`/v1/reports/profitability?${q}`, { token }),
+        api<ProfitabilityAnalysis>(
+          `/v1/reports/profitability/analysis?${q}`,
+          { token },
+        ),
+      ]);
       setReport(data);
+      setAnalysis(insight);
     } catch (e) {
       setReport(null);
+      setAnalysis(null);
       setError(e instanceof Error ? e.message : "Load failed");
     } finally {
       setLoading(false);
@@ -191,6 +214,35 @@ export function ProfitabilityPage() {
               {report.counts.draftExpenses === 1 ? "" : "s"} waiting for
               owner/bookkeeper post — excluded from net profit.
             </div>
+          )}
+
+          {analysis && (
+            <section
+              className="plan-panel rise-block auto-analysis"
+              aria-label="Auto analysis"
+            >
+              <div className="auto-analysis-head">
+                <h2>Auto analysis</h2>
+                <span className="demo-tag">PROPOSAL ONLY</span>
+              </div>
+              <p className="muted">{analysis.honesty}</p>
+              <ul className="truth-list auto-analysis-list">
+                {analysis.insights.map((ins) => (
+                  <li
+                    key={ins.id}
+                    className={`analysis-item analysis-item--${ins.severity}`}
+                  >
+                    <strong>{ins.title}</strong>
+                    <span>{ins.detail}</span>
+                  </li>
+                ))}
+              </ul>
+              {analysis.dataQualityFlags.length > 0 && (
+                <p className="demo-tag">
+                  Flags: {analysis.dataQualityFlags.join(" · ")}
+                </p>
+              )}
+            </section>
           )}
 
           <div className="summary-grid profit-cards">

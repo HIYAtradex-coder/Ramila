@@ -36,7 +36,7 @@ Audited against repository code after pilot scaffold (not aspirational).
 | AI proposal assist per tile | MOCK | Checklists/summaries only; never posts inventory/money/payroll |
 | POS module UI | MISSING | Stub route `/pos`; no vendor connected |
 | Daily reports module | PARTIAL | `/reports` — live inventory/invoice counts; sales KPIs UNKNOWN |
-| Profitability / P&amp;L reports | PARTIAL | `/profitability` + `GET /v1/reports/profitability`; SalesDaily GP + posted opex; DEMO sales labeled uncertified; no bank feed |
+| Profitability / P&amp;L reports | PARTIAL | `/profitability` + `GET /v1/reports/profitability` + `/analysis`; SalesDaily GP + posted opex; DEMO sales unlabeled as certified; proposal-only auto analysis; no bank feed |
 | Expense draft → post → void | PARTIAL | `POST /v1/expenses` (+ post/void); owner/mgr/bookkeeper draft; owner/bookkeeper post; owner void; draft excluded from net |
 | Lottery module UI | MOCK | `/lottery` workpaper shell; not a filing |
 | Sales tax monthly module | MOCK | `/sales-tax` workpaper shell; not a filing |

@@ -21,6 +21,7 @@ export type ExpenseViewModel = {
   paymentMethod: string | null;
   receiptUrl: string | null;
   sourceReference: string | null;
+  attachmentId: string | null;
   recurring: boolean;
   postedAt: string | null;
   voidedAt: string | null;
@@ -53,6 +54,7 @@ export function toExpenseView(row: OperatingExpense): ExpenseViewModel {
     paymentMethod: row.paymentMethod,
     receiptUrl: row.receiptUrl,
     sourceReference: row.sourceReference,
+    attachmentId: row.attachmentId,
     recurring: row.recurring,
     postedAt: row.postedAt?.toISOString() ?? null,
     voidedAt: row.voidedAt?.toISOString() ?? null,
@@ -101,6 +103,7 @@ export async function createExpenseDraft(
       paymentMethod: input.paymentMethod ?? null,
       receiptUrl: input.receiptUrl ?? null,
       sourceReference: input.sourceReference ?? null,
+      attachmentId: input.attachmentId ?? null,
       recurring: input.recurring ?? false,
     },
   });

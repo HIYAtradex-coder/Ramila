@@ -45,9 +45,10 @@ Home tiles map: Project store `docs/home-tiles.md`
 ## Profitability slice (landed)
 
 - Schema: `SalesDaily`, `OperatingExpense` (+ migration)
-- APIs: `POST /v1/expenses`, `POST /v1/expenses/:id/post`, `POST /v1/expenses/:id/void`, `GET /v1/reports/profitability`
+- APIs: `POST /v1/expenses`, `POST /v1/expenses/:id/post`, `POST /v1/expenses/:id/void`, `GET /v1/reports/profitability`, `GET /v1/reports/profitability/analysis` (proposal-only)
 - UI: owner-web `/profitability` + `/expenses`; staff-mobile `app/profitability.tsx`
 - Rules: GP from `SalesDaily.grossProfitMinor` (COGS included); purchases cash-flow only; draft never affects net; incomplete ≠ zero
+- Bank-statement hook only: `sourceType=BANK_STATEMENT` + optional `attachmentId` (no FK / no attachment UI here)
 - Doc: Project store `docs/profitability.md`
 
 ## Local commands

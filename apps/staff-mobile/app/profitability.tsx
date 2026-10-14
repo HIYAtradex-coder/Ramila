@@ -31,6 +31,13 @@ type Report = {
   accountingNotice: string;
 };
 
+type Analysis = {
+  honesty: string;
+  insights: Array<{ id: string; title: string; detail: string; severity: string }>;
+  dataQualityFlags: string[];
+  incompleteMarked: boolean;
+};
+
 const PERIODS: Period[] = ["WEEKLY", "BIWEEKLY", "MONTHLY", "YEARLY"];
 const API = process.env.EXPO_PUBLIC_API_URL ?? "";
 
@@ -43,6 +50,7 @@ function money(minor: number | null | undefined): string {
 export default function ProfitabilityScreen() {
   const [period, setPeriod] = useState<Period>("WEEKLY");
   const [report, setReport] = useState<Report | null>(null);
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [status, setStatus] = useState("Set EXPO_PUBLIC_API_URL + token to load live P&L");
   const [loading, setLoading] = useState(false);
 
@@ -53,20 +61,25 @@ export default function ProfitabilityScreen() {
         "Shell ready · wire EXPO_PUBLIC_API_URL and EXPO_PUBLIC_DEMO_TOKEN for live report",
       );
       setReport(null);
+      setAnalysis(null);
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(
-        `${API}/v1/reports/profitability?period=${period}`,
-        { headers: { authorization: `Bearer ${token}` } },
-      );
+      const headers = { authorization: `Bearer ${token}` };
+      const q = `period=${period}`;
+      const [res, ares] = await Promise.all([
+        fetch(`${API}/v1/reports/profitability?${q}`, { headers }),
+        fetch(`${API}/v1/reports/profitability/analysis?${q}`, { headers }),
+      ]);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const body = (await res.json()) as Report;
-      setReport(body);
+      if (!ares.ok) throw new Error(`Analysis HTTP ${ares.status}`);
+      setReport((await res.json()) as Report);
+      setAnalysis((await ares.json()) as Analysis);
       setStatus("");
     } catch (e) {
       setReport(null);
+      setAnalysis(null);
       setStatus(e instanceof Error ? e.message : "Load failed");
     } finally {
       setLoading(false);
@@ -124,6 +137,18 @@ export default function ProfitabilityScreen() {
               {report.counts.draftExpenses} draft(s) excluded from net
             </Text>
           )}
+          {analysis && (
+            <View style={styles.analysisBox}>
+              <Text style={styles.analysisTitle}>Auto analysis</Text>
+              <Text style={styles.demo}>PROPOSAL ONLY · {analysis.honesty}</Text>
+              {analysis.insights.slice(0, 6).map((ins) => (
+                <View key={ins.id} style={styles.insight}>
+                  <Text style={styles.insightTitle}>{ins.title}</Text>
+                  <Text style={styles.meta}>{ins.detail}</Text>
+                </View>
+              ))}
+            </View>
+          )}
           <Text style={styles.notice}>{report.accountingNotice}</Text>
           <Text style={styles.demo}>
             {report.dataQuality.honestyTags.join(" · ")}
@@ -177,4 +202,14 @@ const styles = StyleSheet.create({
   warn: { color: "#ed8b3b", fontSize: 13, fontWeight: "600", marginTop: 4 },
   notice: { color: "#8b8b92", fontSize: 12, lineHeight: 18, marginTop: 8 },
   demo: { color: "#5a6b62", fontSize: 11, marginTop: 4 },
+  analysisBox: {
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#26262c",
+    gap: 8,
+  },
+  analysisTitle: { color: "#f4f4f5", fontSize: 16, fontWeight: "700" },
+  insight: { gap: 2 },
+  insightTitle: { color: "#00d54b", fontSize: 13, fontWeight: "600" },
 });

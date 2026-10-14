@@ -282,6 +282,8 @@ export const ExpenseSourceType = z.enum([
   "MANUAL",
   "SCAN_PROPOSAL",
   "IMPORT",
+  /** Linked from a bank-statement attachment pipeline (sibling feature) — still draft until human post */
+  "BANK_STATEMENT",
 ]);
 export type ExpenseSourceType = z.infer<typeof ExpenseSourceType>;
 
@@ -300,6 +302,12 @@ export const CreateExpenseRequest = z.object({
   paymentMethod: z.string().max(64).optional(),
   receiptUrl: z.string().url().max(1000).optional(),
   sourceReference: z.string().max(200).optional(),
+  /**
+   * Optional opaque id for a bank-statement / document attachment owned by the
+   * attachment pipeline. No FK here — attachment storage lands separately.
+   * AI/bank import may set this; posting still requires owner/bookkeeper.
+   */
+  attachmentId: z.string().uuid().optional(),
   recurring: z.boolean().optional(),
 });
 export type CreateExpenseRequest = z.infer<typeof CreateExpenseRequest>;
@@ -327,6 +335,8 @@ export const ExpenseView = z.object({
   paymentMethod: z.string().nullable().optional(),
   receiptUrl: z.string().nullable().optional(),
   sourceReference: z.string().nullable().optional(),
+  /** Opaque attachment id when sourceType is BANK_STATEMENT (or other ingest) */
+  attachmentId: z.string().uuid().nullable().optional(),
   recurring: z.boolean(),
   postedAt: z.string().nullable().optional(),
   voidedAt: z.string().nullable().optional(),

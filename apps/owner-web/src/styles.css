@@ -1087,6 +1087,36 @@ th {
   font-weight: 600;
 }
 
+.auto-analysis-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.auto-analysis-head h2 {
+  margin: 0;
+}
+
+.auto-analysis-list li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.analysis-item--attention strong {
+  color: #f0c9a0;
+}
+
+.analysis-item--incomplete strong {
+  color: #f5b4ae;
+}
+
+.analysis-item--info strong {
+  color: var(--accent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
